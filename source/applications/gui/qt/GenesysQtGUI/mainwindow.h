@@ -43,6 +43,7 @@ private slots:
 	void on_actionEditUngroup_triggered();
 
 	void on_actionShowRule_triggered();
+    void on_actionShowGrid_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
 

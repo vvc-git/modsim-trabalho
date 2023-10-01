@@ -41,8 +41,8 @@
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
 	// grid
-	_grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
-	_grid.pen.setStyle(Qt::DotLine);
+    _grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
+    _grid.pen.setStyle(Qt::DotLine);
 }
 
 ModelGraphicsScene::ModelGraphicsScene(const ModelGraphicsScene& orig) { // : QGraphicsScene(orig) {
@@ -190,21 +190,25 @@ void ModelGraphicsScene::removeAnimation() {
 //------------------------------------------------------------------------
 
 void ModelGraphicsScene::showGrid() {
-	// remove existing grid
-	if (items().size() > 0) {
-	//	for (QGraphicsLineItem* line : *_grid.lines) {
-	//		removeItem((QGraphicsItem*) line);
-	//	}
-	}
-	_grid.lines->clear();
+    if (items().size() > 0) {
+        for (QGraphicsLineItem* line : *_grid.lines) {
+            this->removeItem((QGraphicsItem *)line);
+        }
+        this->_grid.clear();
+        return;
+    }
+
+    // clean the grid
+    this->_grid.clear();
+
 	// add new grid
 	for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
 		QGraphicsLineItem* line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
+        _grid.lines->insert(_grid.lines->end(), line);
 	}
 	for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
 		QGraphicsLineItem* line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
+        _grid.lines->insert(_grid.lines->end(), line);
 	}
 }
 
