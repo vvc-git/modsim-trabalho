@@ -29,7 +29,8 @@
  * Created on 16 de fevereiro de 2022, 09:52
  */
 
-#include <qt5/QtWidgets/qgraphicssceneevent.h>
+//#include <qt5/QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QTreeWidget>
 #include <QMessageBox>
 #include "ModelGraphicsScene.h"

@@ -43,18 +43,18 @@ int Smart_Buffer::main(int argc, char** argv) {
 	// create model
 	Create* create1 = plugins->newInstance<Create>(model);
 	Buffer* buffer1 = plugins->newInstance<Buffer>(model);
-	buffer1->setCapacity(5);
-	buffer1->setAdvanceOn(Buffer::AdvanceOn::NewArrivals);
+    // buffer1->setCapacity(5);
+    // buffer1->setAdvanceOn(Buffer::AdvanceOn::NewArrivals);
 	Dispose* dispose1 = plugins->newInstance<Dispose>(model);
 
 
 	Create* create4 = plugins->newInstance<Create>(model);
 	Buffer* buffer4 = plugins->newInstance<Buffer>(model);
-	buffer4->setCapacity(5);
-	buffer4->setAdvanceOn(Buffer::AdvanceOn::Signal);
+    // buffer4->setCapacity(5);
+    // buffer4->setAdvanceOn(Buffer::AdvanceOn::Signal);
 	SignalData *signalData = plugins->newInstance<SignalData>(model);
-	buffer4->setSignal(signalData);
-	buffer4->setArrivalOnFullBufferRule(Buffer::ArrivalOnFullBufferRule::Dispose);
+    // buffer4->setSignal(signalData);
+    // buffer4->setArrivalOnFullBufferRule(Buffer::ArrivalOnFullBufferRule::Dispose);
 
 	Create* create5 = plugins->newInstance<Create>(model);
 	Signal* signal5 = plugins->newInstance<Signal>(model);

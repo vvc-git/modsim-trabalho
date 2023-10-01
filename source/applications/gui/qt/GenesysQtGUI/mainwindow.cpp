@@ -24,7 +24,8 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <Qt>
-#include <qt5/QtWidgets/qgraphicsitem.h>
+//#include <qt5/QtWidgets/qgraphicsitem.h>
+#include <QtWidgets/qgraphicsitem.h>
 #include <QGraphicsScene>
 #include <QDesktopWidget>
 

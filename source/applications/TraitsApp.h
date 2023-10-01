@@ -26,7 +26,7 @@ struct TraitsApp {
 template <> struct TraitsApp<GenesysApplication_if> {
 	//static const bool runTests = false;
 	static const TraceManager::Level traceLevel = TraceManager::Level::L9_mostDetailed;
-	static const bool runGraphicalUserInterface = false;
+    static const bool runGraphicalUserInterface = true;
 
 	//// SMART SMARTs ALPHA SORTED
 	//typedef Smart_AssignWriteSeizes Application;
