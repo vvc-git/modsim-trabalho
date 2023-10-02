@@ -280,10 +280,20 @@ void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEv
 }
 
 void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent) {
-	QGraphicsScene::wheelEvent(wheelEvent);
-	if (_controlIsPressed) {
-		//@TODO: ZOOM!!
-	}
+    QGraphicsScene::wheelEvent(wheelEvent);
+    if (_controlIsPressed)
+    {
+        QGraphicsView *view = views().isEmpty() ? nullptr : views().first();
+        double zoomFactor = 1.1;
+        if (wheelEvent->delta() > 0) {
+            // Zoom in
+            view->scale(zoomFactor, zoomFactor);
+        } else {
+            // Zoom out
+            view->scale(1.0 / zoomFactor, 1.0 / zoomFactor);
+        }
+        wheelEvent->accept();
+    }
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalEntities() const {
