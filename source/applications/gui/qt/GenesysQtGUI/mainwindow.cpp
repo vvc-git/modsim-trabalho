@@ -2037,7 +2037,7 @@ void MainWindow::on_actionShowRule_triggered()
 
 void MainWindow::on_actionShowGrid_triggered()
 {
-    ui->graphicsView->getScene()->showGrid();
+	ui->graphicsView->getScene()->showGrid();
 }
 
 void MainWindow::on_actionShowGuides_triggered()
