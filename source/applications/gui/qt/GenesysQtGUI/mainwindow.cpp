@@ -216,10 +216,10 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
 		_modelfilename = QString::fromStdString(filename);
 		_initUiForNewModel(model);
 		// /TODO: LOAD THE GRAPHICAL PART O A MODEL
-		if (true)
-		{ // there is no graphical part in the file
-			this->_generateGraphicalModelFromModel();
-		}
+        //if (true)
+        //{ // there is no graphical part in the file
+        //	this->_generateGraphicalModelFromModel();
+        //}
 	}
 	return model;
 }
