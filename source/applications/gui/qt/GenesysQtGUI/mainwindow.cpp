@@ -2379,6 +2379,8 @@ void MainWindow::on_actionModelClose_triggered()
 
 	// quando a cena é fechada, limpo o grid associado a ela
 	ui->graphicsView->getScene()->grid()->clear();
+    // volto o botao de grid para "não clicado"
+    ui->actionShowGrid->setChecked(false);
 
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());

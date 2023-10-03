@@ -239,9 +239,6 @@ void ModelGraphicsScene::showGrid()
 	// pego a informação se o grid está visível
 	// obs.: o grid é criado uma única vez para a cena e habilitado como visível ou não. =
 
-	// troco o valor de visible
-	_grid.visible = !_grid.visible;
-
 	// se eu quero que o grid fique visível, verifico se o grid já está desenhado ou não
 	if (_grid.visible)
 	{
@@ -281,6 +278,9 @@ void ModelGraphicsScene::showGrid()
 			line->setVisible(false);
 		}
 	}
+
+    // troco o valor de visible
+    _grid.visible = !_grid.visible;
 }
 
 void ModelGraphicsScene::showRule() {}
