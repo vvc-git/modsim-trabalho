@@ -158,6 +158,28 @@ MainWindow::~MainWindow()
 
 //-----------------------------------------------------------------
 
+bool MainWindow::_saveTextModel(std::string fileName, std::string typeFileName, QString data)
+{
+	std::string finalFileName = typeFileName.empty() ? fileName : fileName + "." + typeFileName;
+	std::ofstream savefile;
+	try
+	{
+		savefile.open(finalFileName, std::ofstream::out);
+		static const QRegularExpression regex("[\n]");
+		QStringList strList = data.split(regex);
+		for (unsigned int i = 0; i < (unsigned int)strList.size(); i++)
+		{
+			savefile << strList.at(i).toStdString() << std::endl;
+		}
+		savefile.close();
+		return true;
+	}
+	catch (const std::exception &e)
+	{
+		return false;
+	}
+}
+
 bool MainWindow::_saveGraphicalModel(std::string filename)
 {
 	std::ofstream savefile;
@@ -1380,6 +1402,18 @@ void MainWindow::_onSceneMouseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	ui->labelMousePos->setText(QString::fromStdString("<" + std::to_string((int)pos.x()) + "," + std::to_string((int)pos.y()) + ">"));
 }
 
+void MainWindow::_onSceneWheelInEvent(QGraphicsSceneWheelEvent *mouseEvent)
+{
+	int value = ui->horizontalSlider_ZoomGraphical->value();
+	ui->horizontalSlider_ZoomGraphical->setValue(value + TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
+void MainWindow::_onSceneWheelOutEvent(QGraphicsSceneWheelEvent *mouseEvent)
+{
+	int value = ui->horizontalSlider_ZoomGraphical->value();
+	ui->horizontalSlider_ZoomGraphical->setValue(value - TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
 void MainWindow::_onSceneGraphicalModelEvent(GraphicalModelEvent *event)
 {
 	_actualizeTabPanes();
@@ -1436,6 +1470,8 @@ void MainWindow::sceneGraphicalModelChanged()
 void MainWindow::_initModelGraphicsView()
 {
 	((ModelGraphicsView *)(ui->graphicsView))->setSceneMouseEventHandler(this, &MainWindow::_onSceneMouseEvent);
+	((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelInEventHandler(this, &MainWindow::_onSceneWheelInEvent);
+	((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelOutEventHandler(this, &MainWindow::_onSceneWheelOutEvent);
 	((ModelGraphicsView *)(ui->graphicsView))->setGraphicalModelEventHandler(this, &MainWindow::_onSceneGraphicalModelEvent);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::changed, this, &MainWindow::sceneChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::focusItemChanged, this, &MainWindow::sceneFocusItemChanged);
@@ -2343,16 +2379,9 @@ void MainWindow::on_actionModelSave_triggered()
 									 file.errorString());
 			return;
 		}
-		std::ofstream savefile;
-		savefile.open(fileName.toStdString(), std::ofstream::out);
-		QString data = ui->TextCodeEditor->toPlainText();
-		QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
-		for (unsigned int i = 0; i < strList.size(); i++)
-		{
-
-			savefile << strList.at(i).toStdString() << std::endl;
-		}
-		savefile.close();
+		_actualizeModelCppCode();
+		_saveTextModel(fileName.toStdString(), "", ui->TextCodeEditor->toPlainText());
+		_saveTextModel(fileName.toStdString(), "cpp", ui->plainTextEditCppCode->toPlainText());
 		_saveGraphicalModel(fileName.toStdString() + ".gui");
 		_modelfilename = fileName;
 		QMessageBox::information(this, "Save Model", "Model successfully saved");
@@ -2379,8 +2408,8 @@ void MainWindow::on_actionModelClose_triggered()
 
 	// quando a cena é fechada, limpo o grid associado a ela
 	ui->graphicsView->getScene()->grid()->clear();
-    // volto o botao de grid para "não clicado"
-    ui->actionShowGrid->setChecked(false);
+	// volto o botao de grid para "não clicado"
+	ui->actionShowGrid->setChecked(false);
 
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());

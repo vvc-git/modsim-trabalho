@@ -279,8 +279,8 @@ void ModelGraphicsScene::showGrid()
 		}
 	}
 
-    // troco o valor de visible
-    _grid.visible = !_grid.visible;
+	// troco o valor de visible
+	_grid.visible = !_grid.visible;
 }
 
 void ModelGraphicsScene::showRule() {}
@@ -371,17 +371,14 @@ void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent)
 	QGraphicsScene::wheelEvent(wheelEvent);
 	if (_controlIsPressed)
 	{
-		QGraphicsView *view = views().isEmpty() ? nullptr : views().first();
-		double zoomFactor = 1.1;
 		if (wheelEvent->delta() > 0)
 		{
-			// Zoom in
-			view->scale(zoomFactor, zoomFactor);
+			((ModelGraphicsView *)(this->parent()))->notifySceneWheelInEventHandler(wheelEvent);
 		}
 		else
 		{
 			// Zoom out
-			view->scale(1.0 / zoomFactor, 1.0 / zoomFactor);
+			((ModelGraphicsView *)(this->parent()))->notifySceneWheelOutEventHandler(wheelEvent);
 		}
 		wheelEvent->accept();
 	}

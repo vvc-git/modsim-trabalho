@@ -6,19 +6,20 @@
 #include <QTreeWidgetItem>
 #include <QGraphicsItem>
 
-
 #include "../../../../kernel/simulator/Simulator.h"
 #include "../../../../kernel/simulator/TraceManager.h"
 #include "ModelGraphicsScene.h"
 
 QT_BEGIN_NAMESPACE
-		namespace Ui {
+namespace Ui
+{
 	class MainWindow;
 }
 
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
 	Q_OBJECT
 
 public:
@@ -30,7 +31,7 @@ public: // to notify changes
 	void setGraphicalModelHasChanged(bool graphicalModelHasChanged);
 
 private slots:
-    // actions
+	// actions
 	void on_actionEditUndo_triggered();
 	void on_actionEditRedo_triggered();
 	void on_actionEditFind_triggered();
@@ -43,13 +44,13 @@ private slots:
 	void on_actionEditUngroup_triggered();
 
 	void on_actionShowRule_triggered();
-    void on_actionShowGrid_triggered();
+	void on_actionShowGrid_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
 
-    void on_actionZoom_In_triggered();
-    void on_actionZoom_Out_triggered();
-    void on_actionZoom_All_triggered();
+	void on_actionZoom_In_triggered();
+	void on_actionZoom_Out_triggered();
+	void on_actionZoom_All_triggered();
 
 	void on_actionDrawLine_triggered();
 	void on_actionDrawRectangle_triggered();
@@ -106,9 +107,8 @@ private slots:
 	void on_actionConnect_triggered();
 	void on_actionComponent_Breakpoint_triggered();
 
-
-    // widget events
-	//void on_textCodeEdit_Model_textChanged();
+	// widget events
+	// void on_textCodeEdit_Model_textChanged();
 	void on_tabWidget_Model_tabBarClicked(int index);
 	void on_tabWidget_Debug_currentChanged(int index);
 	void on_tabWidgetCentral_currentChanged(int index);
@@ -137,86 +137,94 @@ private slots:
 	void on_graphicsView_rubberBandChanged(const QRect &viewportRect, const QPointF &fromScenePoint, const QPointF &toScenePoint);
 	void on_TextCodeEditor_textChanged();
 
-
-
 private: // VIEW
-
 private: // trace handlers
 	void _simulatorTraceHandler(TraceEvent e);
 	void _simulatorTraceErrorHandler(TraceErrorEvent e);
 	void _simulatorTraceSimulationHandler(TraceSimulationEvent e);
 	void _simulatorTraceReportsHandler(TraceEvent e);
+
 private: // simulator event handlers
-	void _onModelCheckSuccessHandler(ModelEvent* re);
-	void _onReplicationStartHandler(SimulationEvent* re);
-	void _onSimulationStartHandler(SimulationEvent* re);
-	void _onSimulationPausedHandler(SimulationEvent* re);
-	void _onSimulationResumeHandler(SimulationEvent* re);
-	void _onSimulationEndHandler(SimulationEvent* re);
-	void _onProcessEventHandler(SimulationEvent* re);
-	void _onEntityCreateHandler(SimulationEvent* re);
-	void _onEntityRemoveHandler(SimulationEvent* re);
+	void _onModelCheckSuccessHandler(ModelEvent *re);
+	void _onReplicationStartHandler(SimulationEvent *re);
+	void _onSimulationStartHandler(SimulationEvent *re);
+	void _onSimulationPausedHandler(SimulationEvent *re);
+	void _onSimulationResumeHandler(SimulationEvent *re);
+	void _onSimulationEndHandler(SimulationEvent *re);
+	void _onProcessEventHandler(SimulationEvent *re);
+	void _onEntityCreateHandler(SimulationEvent *re);
+	void _onEntityRemoveHandler(SimulationEvent *re);
+
 private: // model Graphics View handlers
-	void _onSceneMouseEvent(QGraphicsSceneMouseEvent* mouseEvent);
-	void _onSceneGraphicalModelEvent(GraphicalModelEvent* event);
+	void _onSceneMouseEvent(QGraphicsSceneMouseEvent *mouseEvent);
+    void _onSceneWheelInEvent(QGraphicsSceneWheelEvent *wheelEvent);
+    void _onSceneWheelOutEvent(QGraphicsSceneWheelEvent *wheelEvent);
+	void _onSceneGraphicalModelEvent(GraphicalModelEvent *event);
+
 private: // QGraphicsScene Slots
 	void sceneChanged(const QList<QRectF> &region);
 	void sceneFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason);
-	//void sceneRectChanged(const QRectF &rect);
+	// void sceneRectChanged(const QRectF &rect);
 	void sceneSelectionChanged();
+
 private: // Similar to QGraphicsScene Slots
 	void sceneGraphicalModelChanged();
+
 private: // simulator related
 	void _setOnEventHandlers();
-	void _insertPluginUI(Plugin* plugin);
+	void _insertPluginUI(Plugin *plugin);
 	void _insertFakePlugins();
 	bool _setSimulationModelBasedOnText();
 	bool _createModelImage();
 	std::string _adjustDotName(std::string name);
-	void _insertTextInDot(std::string text, unsigned int compLevel, unsigned int compRank, std::map<unsigned int, std::map<unsigned int, std::list<std::string>*>*>* dotmap, bool isNode = false);
-	void _recursiveCreateModelGraphicPicture(ModelDataDefinition* componentOrData, std::list<ModelDataDefinition*>* visited, std::map<unsigned int, std::map<unsigned int, std::list<std::string>*>*>* dotmap);
+	void _insertTextInDot(std::string text, unsigned int compLevel, unsigned int compRank, std::map<unsigned int, std::map<unsigned int, std::list<std::string> *> *> *dotmap, bool isNode = false);
+	void _recursiveCreateModelGraphicPicture(ModelDataDefinition *componentOrData, std::list<ModelDataDefinition *> *visited, std::map<unsigned int, std::map<unsigned int, std::list<std::string> *> *> *dotmap);
 	void _actualizeModelCppCode();
 	std::string _addCppCodeLine(std::string line, unsigned int indent = 0);
+
 private: // view
 	void _initModelGraphicsView();
-	void _initUiForNewModel(Model* m);
+	void _initUiForNewModel(Model *m);
 	void _actualizeActions();
 	void _actualizeTabPanes();
 	void _actualizeModelSimLanguage();
 	void _actualizeModelTextHasChanged(bool hasChanged);
-	void _actualizeSimulationEvents(SimulationEvent * re);
+	void _actualizeSimulationEvents(SimulationEvent *re);
 	void _actualizeDebugVariables(bool force);
 	void _actualizeDebugEntities(bool force);
 	void _actualizeDebugBreakpoints(bool force);
 	void _actualizeModelComponents(bool force);
 	void _actualizeModelDataDefinitions(bool force);
-	void _actualizeGraphicalModel(SimulationEvent * re);
+	void _actualizeGraphicalModel(SimulationEvent *re);
 	void _insertCommandInConsole(std::string text);
 	void _clearModelEditors();
 	void _gentle_zoom(double factor);
 	void _showMessageNotImplemented();
-	void _recursivalyGenerateGraphicalModelFromModel(ModelComponent* component, List<ModelComponent*>* visited, std::map<ModelComponent*,GraphicalModelComponent*>* map, int *x, int *y, int *ymax, int sequenceInline);
+	void _recursivalyGenerateGraphicalModelFromModel(ModelComponent *component, List<ModelComponent *> *visited, std::map<ModelComponent *, GraphicalModelComponent *> *map, int *x, int *y, int *ymax, int sequenceInline);
 	void _generateGraphicalModelFromModel();
-	//bool _checkStartSimulation();
+	// bool _checkStartSimulation();
 private: // graphical model persistence
 	bool _saveGraphicalModel(std::string filename);
-	Model* _loadGraphicalModel(std::string filename);
+	bool _saveTextModel(std::string fileName, std::string typeFileName, QString data);
+	Model *_loadGraphicalModel(std::string filename);
+
 private:
-	QColor myrgba(uint64_t color); // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error
+	QColor myrgba(uint64_t color);				 // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error
 	static std::string dotColor(uint64_t color); // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error
-private: // interface and model main elements to join
+private:										 // interface and model main elements to join
 	Ui::MainWindow *ui;
-	Simulator* simulator;
+	Simulator *simulator;
+
 private: // misc useful
 	bool _textModelHasChanged = false;
 	bool _graphicalModelHasChanged = false;
 	bool _modelWasOpened = false;
 	QString _modelfilename;
-	std::map<std::string /*category*/,QColor>* _pluginCategoryColor = new std::map<std::string,QColor>();
-    int _zoomValue; // todo should be set for each open graphical model, such as view rect, etc
+	std::map<std::string /*category*/, QColor> *_pluginCategoryColor = new std::map<std::string, QColor>();
+	int _zoomValue; // todo should be set for each open graphical model, such as view rect, etc
 private:
-
-	const struct TABINDEXES_STRUC {
+	const struct TABINDEXES_STRUC
+	{
 		const int TabCentralModelIndex = 0;
 		const int TabCentralSimulationIndex = 1;
 		const int TabCentralReportsIndex = 2;
@@ -237,6 +245,6 @@ private:
 		const int TabReportResultIndex = 1;
 		const int TabReportPlotIndex = 2;
 	} CONST;
-	//CodeEditor* textCodeEdit_Model;
+	// CodeEditor* textCodeEdit_Model;
 };
 #endif // MAINWINDOW_H
