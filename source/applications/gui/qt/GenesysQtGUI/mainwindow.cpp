@@ -2231,7 +2231,7 @@ void MainWindow::on_actionViewConfigure_triggered()
 
 void MainWindow::_initUiForNewModel(Model *m)
 {
-	// ui->graphicsView->getScene()->showGrid(); //@TODO: Bad place to be
+	ui->graphicsView->getScene()->showGrid(); //@TODO: Bad place to be
 	ui->textEdit_Simulation->clear();
 	ui->textEdit_Reports->clear();
 	ui->textEdit_Console->moveCursor(QTextCursor::End);
@@ -2376,6 +2376,10 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
+
+	// quando a cena é fechada, limpo o grid associado a ela
+	ui->graphicsView->getScene()->grid()->clear();
+
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());
 	_actualizeActions();
