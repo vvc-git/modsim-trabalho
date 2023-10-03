@@ -200,11 +200,13 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
 		_clearModelEditors();
 		std::string line;
 		std::ifstream file(filename);
+        QStringList Teste;
 		if (file.is_open())
 		{
 			while (std::getline(file, line))
 			{
 				ui->TextCodeEditor->appendPlainText(QString::fromStdString(line));
+                Teste.append(QString::fromStdString(line));
 			}
 			file.close();
 		}
@@ -215,11 +217,40 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
 		ui->textEdit_Console->append("\n");
 		_modelfilename = QString::fromStdString(filename);
 		_initUiForNewModel(model);
-		// /TODO: LOAD THE GRAPHICAL PART O A MODEL
+        // /TODO: LOAD THE GRAPHICAL PART O A MODEL
         //if (true)
         //{ // there is no graphical part in the file
-        //	this->_generateGraphicalModelFromModel();
+        //    this->_generateGraphicalModelFromModel();
         //}
+        // Iterando pelos elementos da QStringList começando do índice 2
+
+        if (_modelfilename.endsWith(".gui")) {
+            for (int i = 2; i < Teste.size(); ++i) {
+                QStringList linha = Teste.at(i).split("\t");
+                QString id = linha[0];
+                QString componet = linha[1];
+                QString position = linha[2];
+
+                // Expressão regular para encontrar os números dentro dos parênteses
+                QRegularExpression regex("\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
+                QRegularExpressionMatch match = regex.match(position);
+
+                if (match.hasMatch()) {
+                    QString coord1 = match.captured(1);
+                    QString coord2 = match.captured(2);
+                    QString coord3 = match.captured(3);
+                    QString coord4 = match.captured(4);
+                }
+
+
+
+
+                if (ui->TextCodeEditor->toPlainText().contains(id))
+                    std::cout << "Elemento[" << i << "]: " << id.toStdString()<< std::endl;
+
+            }
+        }
+
 	}
 	return model;
 }
