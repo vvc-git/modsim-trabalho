@@ -351,7 +351,7 @@ void ModelGraphicsScene::focusOutEvent(QFocusEvent *focusEvent) {
 void ModelGraphicsScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
 	QGraphicsScene::dropEvent(event);
 	if (this->_objectBeingDragged != nullptr) {
-		QTreeWidgetItem* treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
+        QTreeWidgetItem*    treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
 		if (treeItem != nullptr) {			
 			QColor color = treeItem->foreground(0).color(); // treeItem->textColor(0);
 			QString pluginname = treeItem->whatsThis(0);

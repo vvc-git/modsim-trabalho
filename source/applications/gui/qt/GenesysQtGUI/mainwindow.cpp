@@ -173,8 +173,8 @@ bool MainWindow::_saveGraphicalModel(std::string filename)
 		ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
 		for (QGraphicsItem *item : *scene->getGraphicalModelComponents())
 		{
-			GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
-			line = std::to_string(gmc->getComponent()->getId()) + "\t" + Util::TypeOf<ModelComponent>() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")";
+            GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
+            line = std::to_string(gmc->getComponent()->getId()) + "\t" + gmc->getComponent()->getClassname() + "\t" + gmc->getComponent()->getName() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")";
 			savefile << line << std::endl;
 		}
 		savefile.close();
@@ -199,14 +199,71 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
 	{ // now load the text into the GUI
 		_clearModelEditors();
 		std::string line;
-		std::ifstream file(filename);
-        QStringList Teste;
-		if (file.is_open())
+        std::ifstream file(filename);
+
+        if (file.is_open())
 		{
+            int count = 0;
 			while (std::getline(file, line))
 			{
 				ui->TextCodeEditor->appendPlainText(QString::fromStdString(line));
-                Teste.append(QString::fromStdString(line));
+
+                // TODO: Colocar para ler depois do comentario;
+
+                QFileInfo fileInfo(QString::fromStdString(filename));
+                QString fileExtension = fileInfo.suffix();
+
+                if ((fileExtension == "gui") && (count > 1)) {
+
+                    QStringList separados = QString::fromStdString(line).split("\t");
+
+                    // Extrai do arquivo
+
+                    // ID do componente
+                    Util::identification id = separados[0].toULong();
+
+                    // Componente
+                    QString c = separados[1];
+
+                    // Posição
+                    QString p = separados[3];
+
+                    // Regular expression to extract numerical values from the string
+                    QRegularExpression regex("position=\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
+
+                    // Match the regular expression against the coordinates string
+                    QRegularExpressionMatch match = regex.match(p);
+
+                    QPoint pos;
+
+                    // Extrai a posição
+                    if (match.hasMatch()) {
+                        // Extract x and y values from the regular expression match
+                        qreal x = match.captured(1).toDouble();
+                        qreal y = match.captured(3).toDouble();
+
+                        // Create a QPoint object from extracted x and y values
+                        pos.setX(x);
+                        pos.setY(y);
+                    }
+
+                    // Pega a cena para adicionar o componente nela
+                    ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+                    // Pega o Plugin
+                    Plugin* plugin = simulator->getPlugins()->find(c.toStdString());
+
+                    // Cria o componente no modelo
+                    ModelComponent* component = simulator->getModels()->current()->getComponents()->find(id);
+
+                    // Seta uma cor
+                    QColor corAzul = Qt::blue;
+
+                    // Desenha na tela
+                    scene->addGraphicalModelComponent(plugin, component, pos, corAzul);
+
+                }
+                ++count;
 			}
 			file.close();
 		}
@@ -223,36 +280,14 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
         //    this->_generateGraphicalModelFromModel();
         //}
         // Iterando pelos elementos da QStringList começando do índice 2
-
-        if (_modelfilename.endsWith(".gui")) {
-            for (int i = 2; i < Teste.size(); ++i) {
-                QStringList linha = Teste.at(i).split("\t");
-                QString id = linha[0];
-                QString componet = linha[1];
-                QString position = linha[2];
-
-                // Expressão regular para encontrar os números dentro dos parênteses
-                QRegularExpression regex("\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
-                QRegularExpressionMatch match = regex.match(position);
-
-                if (match.hasMatch()) {
-                    QString coord1 = match.captured(1);
-                    QString coord2 = match.captured(2);
-                    QString coord3 = match.captured(3);
-                    QString coord4 = match.captured(4);
-                }
+        //unsigned int x = simulator->getModels()->current()->getComponents()->getNumberOfComponents();
+        //unsigned int y = model->getComponents()->getNumberOfComponents();
+        //std::cout << y << std::endl;
+        //std::cout << x << std::endl;
 
 
-
-
-                if (ui->TextCodeEditor->toPlainText().contains(id))
-                    std::cout << "Elemento[" << i << "]: " << id.toStdString()<< std::endl;
-
-            }
-        }
-
-	}
-	return model;
+    }
+    return model;
 }
 
 //-----------------------------------------------------------------
