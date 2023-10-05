@@ -19,6 +19,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <QTextStream>
 #include <streambuf>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -158,48 +159,65 @@ MainWindow::~MainWindow()
 
 //-----------------------------------------------------------------
 
-bool MainWindow::_saveTextModel(std::string fileName, std::string typeFileName, QString data)
+bool MainWindow::_saveTextModel(QFile *saveFile, QString data)
 {
-	std::string finalFileName = typeFileName.empty() ? fileName : fileName + "." + typeFileName;
-	std::ofstream savefile;
+    QTextStream out(saveFile);
+
+    out << "#SIMULANG" << Qt::endl;
+
 	try
 	{
-		savefile.open(finalFileName, std::ofstream::out);
-		static const QRegularExpression regex("[\n]");
-		QStringList strList = data.split(regex);
-		for (unsigned int i = 0; i < (unsigned int)strList.size(); i++)
+        static const QRegularExpression regex("[\n]");
+        QStringList strList = data.split(regex, Qt::SkipEmptyParts);
+        for (const QString &line : strList)
 		{
-			savefile << strList.at(i).toStdString() << std::endl;
-		}
-		savefile.close();
-		return true;
+            out << line << Qt::endl;
+        }
+        return true;
 	}
-	catch (const std::exception &e)
+    catch (const std::exception &e)
 	{
 		return false;
 	}
 }
 
-bool MainWindow::_saveGraphicalModel(std::string filename)
-{
-	std::ofstream savefile;
-	try
-	{
-		savefile.open(filename, std::ofstream::out);
-		savefile << "#Genegys Graphic Model" << std::endl;
-		std::string line;
-		line = "0\tView\t";
-		line += "zoom=" + std::to_string(ui->horizontalSlider_ZoomGraphical->value());
+bool MainWindow::_saveGraphicalModel(QString filename)
+{    QFile saveFile(filename);
+
+    try
+    {
+        if (!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QMessageBox::information(this, tr("Unable to access file to save"),
+                                     saveFile.errorString());
+            return false;
+        }
+
+        _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
+
+        QTextStream out(&saveFile);
+        out << "#GUI" << Qt::endl;
+        out << "#Genegys Graphic Model" << Qt::endl;
+        QString line = "0\tView\t";
+        line += "zoom=" + QString::number(ui->horizontalSlider_ZoomGraphical->value());
 		line += ", grid=10, rule=0, snap=0, viewpoint=(0,0)";
-		savefile << line << std::endl;
-		ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
-		for (QGraphicsItem *item : *scene->getGraphicalModelComponents())
-		{
-			GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
-			line = std::to_string(gmc->getComponent()->getId()) + "\t" + Util::TypeOf<ModelComponent>() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")";
-			savefile << line << std::endl;
-		}
-		savefile.close();
+        out << line << Qt::endl;
+
+        ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+        if (scene)
+        {
+            for (QGraphicsItem *item : *scene->getGraphicalModelComponents())
+            {
+                GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
+                if (gmc)
+                {
+                    line = QString::fromStdString(std::to_string(gmc->getComponent()->getId()) + "\t" + gmc->getComponent()->getClassname() + "\t" + gmc->getComponent()->getName() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")");
+                    out << line << Qt::endl;
+                }
+            }
+        }
+        saveFile.close();
 		return true;
 	}
 	catch (const std::exception &e)
@@ -2372,17 +2390,19 @@ void MainWindow::on_actionModelSave_triggered()
 	else
 	{
 		_insertCommandInConsole("save " + fileName.toStdString());
-		QFile file(fileName);
-		if (!file.open(QIODevice::WriteOnly))
-		{
-			QMessageBox::information(this, tr("Unable to access file to save"),
-									 file.errorString());
-			return;
-		}
-		_actualizeModelCppCode();
-		_saveTextModel(fileName.toStdString(), "", ui->TextCodeEditor->toPlainText());
-		_saveTextModel(fileName.toStdString(), "cpp", ui->plainTextEditCppCode->toPlainText());
-		_saveGraphicalModel(fileName.toStdString() + ".gui");
+        QString finalFileName = fileName + ".gen";
+        QFile saveFile(finalFileName);
+
+        if (!saveFile.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(this, tr("Unable to access file to save"),
+                                     saveFile.errorString());
+            return;
+        } else {
+            _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
+            saveFile.close();
+        }
+        _saveGraphicalModel(fileName + ".gui");
 		_modelfilename = fileName;
 		QMessageBox::information(this, "Save Model", "Model successfully saved");
 		// convert text info Model
