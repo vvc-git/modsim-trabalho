@@ -40,7 +40,11 @@
 
 # Arquivos extras do GenesysQtGui
 /source/applications/gui/qt/GenesysQtGUI/GenesysQtGUI.pro.user
+<<<<<<< HEAD
 /source/applications/gui/qt/GenesysQtGUI/GenesysQtGUI.pro.user.*
 
 # pasta vscode
 .vscode
+=======
+/source/applications/gui/qt/GenesysQtGUI/GenesysQtGUI.pro.user.*
+>>>>>>> origin/caso-3.2
