@@ -45,11 +45,11 @@ bool GenSerializer::dump(std::ostream& output) {
 			if (plugin == nullptr) return 1;
 				if (plugin->getPluginInfo()->isComponent()) return 0;
 						_model->getTracer()->trace(linearize(fields.get()));
-						output << linearize(fields.get());
+						output << linearize(fields.get()) << "\n";
 					return 0;
 				});
 
-	output << "\n# Model Components\n";
+	output << "\n# Model Componentss\n";
 	err = for_each([&](auto& key) {
 		fields->clear();
 		get(key, fields.get());
@@ -59,7 +59,7 @@ bool GenSerializer::dump(std::ostream& output) {
 			if (plugin == nullptr) return 1;
 				if (!plugin->getPluginInfo()->isComponent()) return 0;
 						_model->getTracer()->trace(linearize(fields.get()));
-						output << linearize(fields.get());
+						output << linearize(fields.get()) << "\n";
 					return 0;
 				});
 
