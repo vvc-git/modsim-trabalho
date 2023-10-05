@@ -27,6 +27,7 @@ public:
 	QRectF boundingRect() const override;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 	ModelComponent* getComponent() const;
+    QColor getColor() const;
 	QList<GraphicalComponentPort *> getGraphicalInputPorts() const;
 	QList<GraphicalComponentPort *> getGraphicalOutputPorts() const;
 private:

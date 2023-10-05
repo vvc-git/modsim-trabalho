@@ -163,8 +163,6 @@ bool MainWindow::_saveTextModel(QFile *saveFile, QString data)
 {
     QTextStream out(saveFile);
 
-    out << "#SIMULANG" << Qt::endl;
-
     try
     {
         static const QRegularExpression regex("[\n]");
@@ -182,7 +180,8 @@ bool MainWindow::_saveTextModel(QFile *saveFile, QString data)
 }
 
 bool MainWindow::_saveGraphicalModel(QString filename)
-{    QFile saveFile(filename);
+{
+    QFile saveFile(filename);
 
     try
     {
@@ -193,9 +192,11 @@ bool MainWindow::_saveGraphicalModel(QString filename)
             return false;
         }
 
+        QTextStream out(&saveFile);
+
+        out << "#SIMULANG" << Qt::endl;
         _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
 
-        QTextStream out(&saveFile);
         out << "#GUI" << Qt::endl;
         out << "#Genegys Graphic Model" << Qt::endl;
         QString line = "0\tView\t";
@@ -212,7 +213,7 @@ bool MainWindow::_saveGraphicalModel(QString filename)
                 GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
                 if (gmc)
                 {
-                    line = QString::fromStdString(std::to_string(gmc->getComponent()->getId()) + "\t" + gmc->getComponent()->getClassname() + "\t" + gmc->getComponent()->getName() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")");
+                    line = QString::fromStdString(std::to_string(gmc->getComponent()->getId()) + "\t" + gmc->getComponent()->getClassname() + "\t" + gmc->getComponent()->getName() + "\t" + "color=" + gmc->getColor().name().toStdString() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")");
                     out << line << Qt::endl;
                 }
             }
