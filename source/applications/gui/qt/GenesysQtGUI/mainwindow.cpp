@@ -24,6 +24,8 @@
 #include <QTextStream>
 #include <QFileDialog>
 #include <QGraphicsScene>
+#include <QDateTime>
+#include <QTemporaryFile>
 #include <Qt>
 // #include <qt5/QtWidgets/qgraphicsitem.h>
 #include <QtWidgets/qgraphicsitem.h>
@@ -192,12 +194,9 @@ bool MainWindow::_saveGraphicalModel(QString filename)
             return false;
         }
 
-        QTextStream out(&saveFile);
-
-        out << "#SIMULANG" << Qt::endl;
         _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
 
-        out << "#GUI" << Qt::endl;
+        QTextStream out(&saveFile);
         out << "#Genegys Graphic Model" << Qt::endl;
         QString line = "0\tView\t";
         line += "zoom=" + QString::number(ui->horizontalSlider_ZoomGraphical->value());
@@ -233,99 +232,133 @@ bool MainWindow::_saveGraphicalModel(QString filename)
     // }
 }
 
-Model *MainWindow::_loadGraphicalModel(std::string filename)
-{
-    Model *model = simulator->getModels()->loadModel(filename);
+Model *MainWindow::_loadGraphicalModel(std::string filename) {
+    QFile file(QString::fromStdString(filename));
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::information(this, tr("Unable to access file to save"),
+                                file.errorString());
+        return nullptr;
+    }
+
+    QString content = file.readAll();
+    file.close();
+
+    QStringList lines = content.split("\n");
+
+    QStringList simulLang;
+    QStringList gui;
+
+    bool guiFlag = false;
+
+    for (const QString &line : lines) {
+        if (line.startsWith("#Genegys Graphic Model")) {
+            guiFlag = true;
+            continue;
+        }
+
+        if (!guiFlag) simulLang.append(line);
+        else gui.append(line);
+    }
+
+    file.close();
+
+    QTemporaryFile tempFile;
+
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+    QString newFilename = QString("/tempFile-%1.gen").arg(currentDateTime.toString("yyyy-MM-dd-hh-mm-ss"));
+
+    tempFile.setFileTemplate(QDir::tempPath() + newFilename);
+    tempFile.open();
+
+    QTextStream outStream(&tempFile);
+    for (const QString& line : simulLang) {
+        outStream << line << Qt::endl;
+    }
+
+    outStream.flush();
+
+    tempFile.close();
+
+    Model *model = simulator->getModels()->loadModel(tempFile.fileName().toStdString());
+
+    QFile::remove(tempFile.fileName());
     std::list<ModelComponent*> c = * model->getComponents()->getAllComponents();
-    if (model != nullptr)
-	{ // now load the text into the GUI
+    if (model != nullptr) {
 		_clearModelEditors();
-		std::string line;
-        std::ifstream file(filename);
 
-        if (file.is_open())
-		{
-            int count = 0;
-			while (std::getline(file, line))
-			{
-				ui->TextCodeEditor->appendPlainText(QString::fromStdString(line));
+        bool firstLine = true;
 
-                // TODO: Colocar para ler depois do comentario;
+        for (const QString& line : gui) {
+            if (line.trimmed().isEmpty()) {
+                continue;
+            }
 
-                QFileInfo fileInfo(QString::fromStdString(filename));
-                QString fileExtension = fileInfo.suffix();
+            if (firstLine) {
+                firstLine = false;
+                continue;
+            }
 
-                if ((fileExtension == "gui") && (count > 1)) {
+            QStringList split = line.split("\t");
 
-                    QStringList separados = QString::fromStdString(line).split("\t");
+            Util::identification id = split[0].toULong();
 
-                    // Extrai do arquivo
+            // Component
+            QString comp = split[1];
 
-                    // ID do componente
-                    Util::identification id = separados[0].toULong();
+            // Color
+            QString col = split[3];
 
-                    // Componente
-                    QString com = separados[1];
+            // Posição
+            QString pos = split[4];
 
-                    // Color
-                    QString col = separados[3];
+            // Expressao regular para pegar a cor
+            QRegularExpression regexColor("color=#([0-9A-Fa-f]{6})");
 
-                    // Posição
-                    QString p = separados[3];
+            // Cria a expressao regular match
+            QRegularExpressionMatch match = regexColor.match(col);
 
-                    // Expressao regular para pegar a cor
-                    QRegularExpression regexColor("color=#[0-9A-Fa-f]{6}");
+            QString hexColor;
 
-                    // Cria a expressao regular match
-                    QRegularExpressionMatch match = regexColor.match(col);
+            // Extrai a cor
+            if (match.hasMatch()) {hexColor = match.captured(1);}
 
-                    QString x;
+            // Cria a cor
+            QColor color("#"+ hexColor);
 
-                    // Extrai a cor
-                    if (match.hasMatch()) {x = match.captured(1);}
+            // Expressao regular para pegar a cor
+            QRegularExpression regexPos("position=\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
 
-                    // Cria a cor
-                    QColor color(x);
+            // Cria a expressao regular match
+            match = regexPos.match(pos);
 
-                    // Expressao regular para pegar a cor
-                    QRegularExpression regexPos("position=\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
+            QPoint position;
 
-                    // Cria a expressao regular match
-                    match = regexPos.match(p);
+            // Extrai a posição
+            if (match.hasMatch()) {
+                // Extrai x e y
+                qreal x = match.captured(1).toDouble();
+                qreal y = match.captured(3).toDouble();
 
-                    QPoint pos;
+                // Seta x e y em pos
+                position.setX(x);
+                position.setY(y);
+            }
 
-                    // Extrai a posição
-                    if (match.hasMatch()) {
-                        // Extrai x e y
-                        qreal x = match.captured(1).toDouble();
-                        qreal y = match.captured(3).toDouble();
+            // Pega a cena para adicionar o componente nela
+            ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
 
-                        // Seta x e y em pos
-                        pos.setX(x);
-                        pos.setY(y);
-                    }
+            // Pega o Plugin
+            Plugin* plugin = simulator->getPlugins()->find(comp.toStdString());
 
-                    // Pega a cena para adicionar o componente nela
-                    ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+            // Cria o componente no modelo
+            ModelComponent* component = simulator->getModels()->current()->getComponents()->find(id);
+            // Desenha na tela
+            scene->addGraphicalModelComponent(plugin, component, position, color);
 
-                    // Pega o Plugin
-                    Plugin* plugin = simulator->getPlugins()->find(com.toStdString());
 
-                    // Cria o componente no modelo
-                    ModelComponent* component = simulator->getModels()->current()->getComponents()->find(id);
-                    // Desenha na tela
-                    scene->addGraphicalModelComponent(plugin, component, pos, color);
+        }
 
-                }
-                ++count;
-			}
-			file.close();
-		}
-		else
-		{
-			ui->textEdit_Console->append(QString("Error reading model file"));
-		}
 		ui->textEdit_Console->append("\n");
 		_modelfilename = QString::fromStdString(filename);
 		_initUiForNewModel(model);
@@ -339,8 +372,6 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
         //unsigned int y = model->getComponents()->getNumberOfComponents();
         //std::cout << y << std::endl;
         //std::cout << x << std::endl;
-
-
     }
     return model;
 }
@@ -2426,16 +2457,16 @@ void MainWindow::on_actionModelNew_triggered()
 
 void MainWindow::on_actionModelOpen_triggered()
 {
-	QString fileName = QFileDialog::getOpenFileName(
-		this, "Open Model", "./models/",
-		tr("All files (*.*);;Genesys model (*.gen)"));
-	if (fileName == "")
+    QString fileName = QFileDialog::getOpenFileName(
+        this, "Open Model", "./models/",
+        tr("Genesys Graphic Model (*.gui)"));
+    if (fileName == "")
 	{
 		return;
 	}
-	_insertCommandInConsole("load " + fileName.toStdString());
+    _insertCommandInConsole("load " + fileName.toStdString());
 	// load Model (in the simulator)
-	if (this->_loadGraphicalModel(fileName.toStdString()))
+    if (this->_loadGraphicalModel(fileName.toStdString()))
 	{
 		QMessageBox::information(this, "Open Model", "Model successfully oppened");
 	}
@@ -2449,15 +2480,15 @@ void MainWindow::on_actionModelOpen_triggered()
 
 void MainWindow::on_actionModelSave_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this,
+    QString filename = QFileDialog::getSaveFileName(this,
         tr("Save Model"), _modelfilename,
         tr("Genesys Model (*.gen);;All Files (*)"));
 
-    if (fileName.isEmpty()) return;
+    if (filename.isEmpty()) return;
     else
     {
-        _insertCommandInConsole("save " + fileName.toStdString());
-        QString finalFileName = fileName + ".gen";
+        _insertCommandInConsole("save " + filename.toStdString());
+        QString finalFileName = filename + ".gen";
         QFile saveFile(finalFileName);
 
         if (!saveFile.open(QIODevice::WriteOnly))
@@ -2469,8 +2500,8 @@ void MainWindow::on_actionModelSave_triggered()
             _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
             saveFile.close();
         }
-        _saveGraphicalModel(fileName + ".gui");
-        _modelfilename = fileName;
+        _saveGraphicalModel(filename + ".gui");
+        _modelfilename = filename;
         QMessageBox::information(this, "Save Model", "Model successfully saved");
         // convert text info Model
         _setSimulationModelBasedOnText();
