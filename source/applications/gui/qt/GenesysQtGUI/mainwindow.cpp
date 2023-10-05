@@ -194,8 +194,9 @@ bool MainWindow::_saveGraphicalModel(std::string filename)
 
 Model *MainWindow::_loadGraphicalModel(std::string filename)
 {
-	Model *model = simulator->getModels()->loadModel(filename);
-	if (model != nullptr)
+    Model *model = simulator->getModels()->loadModel(filename);
+    std::list<ModelComponent*> c = * model->getComponents()->getAllComponents();
+    if (model != nullptr)
 	{ // now load the text into the GUI
 		_clearModelEditors();
 		std::string line;
@@ -223,26 +224,43 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
                     Util::identification id = separados[0].toULong();
 
                     // Componente
-                    QString c = separados[1];
+                    QString com = separados[1];
+
+                    // Color
+                    QString col = separados[3];
 
                     // Posição
                     QString p = separados[3];
 
-                    // Regular expression to extract numerical values from the string
-                    QRegularExpression regex("position=\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
+                    // Expressao regular para pegar a cor
+                    QRegularExpression regexColor("color=#[0-9A-Fa-f]{6}");
 
-                    // Match the regular expression against the coordinates string
-                    QRegularExpressionMatch match = regex.match(p);
+                    // Cria a expressao regular match
+                    QRegularExpressionMatch match = regexColor.match(col);
+
+                    QString x;
+
+                    // Extrai a cor
+                    if (match.hasMatch()) {x = match.captured(1);}
+
+                    // Cria a cor
+                    QColor color(x);
+
+                    // Expressao regular para pegar a cor
+                    QRegularExpression regexPos("position=\\((-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)\\)");
+
+                    // Cria a expressao regular match
+                    match = regexPos.match(p);
 
                     QPoint pos;
 
                     // Extrai a posição
                     if (match.hasMatch()) {
-                        // Extract x and y values from the regular expression match
+                        // Extrai x e y
                         qreal x = match.captured(1).toDouble();
                         qreal y = match.captured(3).toDouble();
 
-                        // Create a QPoint object from extracted x and y values
+                        // Seta x e y em pos
                         pos.setX(x);
                         pos.setY(y);
                     }
@@ -251,16 +269,12 @@ Model *MainWindow::_loadGraphicalModel(std::string filename)
                     ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
 
                     // Pega o Plugin
-                    Plugin* plugin = simulator->getPlugins()->find(c.toStdString());
+                    Plugin* plugin = simulator->getPlugins()->find(com.toStdString());
 
                     // Cria o componente no modelo
                     ModelComponent* component = simulator->getModels()->current()->getComponents()->find(id);
-
-                    // Seta uma cor
-                    QColor corAzul = Qt::blue;
-
                     // Desenha na tela
-                    scene->addGraphicalModelComponent(plugin, component, pos, corAzul);
+                    scene->addGraphicalModelComponent(plugin, component, pos, color);
 
                 }
                 ++count;
