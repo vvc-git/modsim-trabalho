@@ -198,7 +198,8 @@ private: // view
 	void _generateGraphicalModelFromModel();
 	//bool _checkStartSimulation();
 private: // graphical model persistence
-	bool _saveGraphicalModel(std::string filename);
+    bool _saveGraphicalModel(QString filename);
+    bool _saveTextModel(QFile *saveFile, QString data);
 	Model* _loadGraphicalModel(std::string filename);
 private:
 	QColor myrgba(uint64_t color); // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error

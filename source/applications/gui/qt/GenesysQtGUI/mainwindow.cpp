@@ -21,6 +21,7 @@
 #include <sstream>
 #include <streambuf>
 #include <QMessageBox>
+#include <QTextStream>
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <Qt>
@@ -158,33 +159,77 @@ MainWindow::~MainWindow() {
 
 //-----------------------------------------------------------------
 
-bool MainWindow::_saveGraphicalModel(std::string filename) {
-	std::ofstream savefile;
-	try {
-		savefile.open(filename, std::ofstream::out);
-		savefile << "#Genegys Graphic Model" << std::endl;
-		std::string line;
-		line = "0\tView\t";
-		line += "zoom=" + std::to_string(ui->horizontalSlider_ZoomGraphical->value());
-		line += ", grid=10, rule=0, snap=0, viewpoint=(0,0)";
-		savefile << line << std::endl;
-		ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
-		for (QGraphicsItem* item : *scene->getGraphicalModelComponents()) {
-			GraphicalModelComponent* gmc = (GraphicalModelComponent*) item;
-			line = std::to_string(gmc->getComponent()->getId()) + "\t" + Util::TypeOf<ModelComponent>() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")";
-			savefile << line << std::endl;
-		}
-		savefile.close();
-		return true;
-	} catch (const std::exception& e) {
-		return false;
-	}
+bool MainWindow::_saveTextModel(QFile *saveFile, QString data)
+{
+    QTextStream out(saveFile);
 
-	//QString data = QString::fromStdString(dot);
-	//QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
-	//for (unsigned int i = 0; i < strList.size(); i++) {
-	//	savefile << strList.at(i).toStdString() << std::endl;
-	//}
+    out << "#SIMULANG" << Qt::endl;
+
+    try
+    {
+        static const QRegularExpression regex("[\n]");
+        QStringList strList = data.split(regex, Qt::SkipEmptyParts);
+        for (const QString &line : strList)
+        {
+            out << line << Qt::endl;
+        }
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        return false;
+    }
+}
+
+bool MainWindow::_saveGraphicalModel(QString filename)
+{    QFile saveFile(filename);
+
+    try
+    {
+        if (!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QMessageBox::information(this, tr("Unable to access file to save"),
+                                     saveFile.errorString());
+            return false;
+        }
+
+        _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
+
+        QTextStream out(&saveFile);
+        out << "#GUI" << Qt::endl;
+        out << "#Genegys Graphic Model" << Qt::endl;
+        QString line = "0\tView\t";
+        line += "zoom=" + QString::number(ui->horizontalSlider_ZoomGraphical->value());
+        line += ", grid=10, rule=0, snap=0, viewpoint=(0,0)";
+        out << line << Qt::endl;
+
+        ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+        if (scene)
+        {
+            for (QGraphicsItem *item : *scene->getGraphicalModelComponents())
+            {
+                GraphicalModelComponent *gmc = (GraphicalModelComponent *)item;
+                if (gmc)
+                {
+                    line = QString::fromStdString(std::to_string(gmc->getComponent()->getId()) + "\t" + gmc->getComponent()->getClassname() + "\t" + gmc->getComponent()->getName() + "\t" + "position=(" + std::to_string(gmc->scenePos().x()) + "," + std::to_string(gmc->scenePos().y()) + ")");
+                    out << line << Qt::endl;
+                }
+            }
+        }
+        saveFile.close();
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        return false;
+    }
+
+    // QString data = QString::fromStdString(dot);
+    // QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
+    // for (unsigned int i = 0; i < strList.size(); i++) {
+    //	savefile << strList.at(i).toStdString() << std::endl;
+    // }
 }
 
 Model* MainWindow::_loadGraphicalModel(std::string filename) {
@@ -2045,37 +2090,35 @@ void MainWindow::on_actionModelOpen_triggered()
 
 void MainWindow::on_actionModelSave_triggered()
 {
-	QString fileName = QFileDialog::getSaveFileName(this,
-			tr("Save Model"), _modelfilename,
-			tr("Genesys Model (*.gen);;All Files (*)"));
-	if (fileName.isEmpty())
-		return;
-	else {
-		_insertCommandInConsole("save " + fileName.toStdString());
-		QFile file(fileName);
-		if (!file.open(QIODevice::WriteOnly)) {
-			QMessageBox::information(this, tr("Unable to access file to save"),
-					file.errorString());
-			return;
-		}
-		std::ofstream savefile;
-		savefile.open(fileName.toStdString(), std::ofstream::out);
-		QString data = ui->TextCodeEditor->toPlainText();
-		QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
-		for (unsigned int i = 0; i < strList.size(); i++) {
+    QString fileName = QFileDialog::getSaveFileName(this,
+        tr("Save Model"), _modelfilename,
+        tr("Genesys Model (*.gen);;All Files (*)"));
 
-			savefile << strList.at(i).toStdString() << std::endl;
-		}
-		savefile.close();
-		_saveGraphicalModel(fileName.toStdString() + ".gui");
-		_modelfilename = fileName;
-		QMessageBox::information(this, "Save Model", "Model successfully saved");
-		// convert text info Model
-		_setSimulationModelBasedOnText();
-		//
-		_actualizeModelTextHasChanged(false);
-	}
-	_actualizeActions();
+    if (fileName.isEmpty()) return;
+    else
+    {
+        _insertCommandInConsole("save " + fileName.toStdString());
+        QString finalFileName = fileName + ".gen";
+        QFile saveFile(finalFileName);
+
+        if (!saveFile.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(this, tr("Unable to access file to save"),
+                                     saveFile.errorString());
+            return;
+        } else {
+            _saveTextModel(&saveFile, ui->TextCodeEditor->toPlainText());
+            saveFile.close();
+        }
+        _saveGraphicalModel(fileName + ".gui");
+        _modelfilename = fileName;
+        QMessageBox::information(this, "Save Model", "Model successfully saved");
+        // convert text info Model
+        _setSimulationModelBasedOnText();
+        //
+        _actualizeModelTextHasChanged(false);
+    }
+    _actualizeActions();
 }
 
 
