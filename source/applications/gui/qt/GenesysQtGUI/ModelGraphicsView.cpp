@@ -129,6 +129,14 @@ void ModelGraphicsView::notifySceneMouseEventHandler(QGraphicsSceneMouseEvent* m
 	this->_sceneMouseEventHandler(mouseEvent);
 }
 
+void ModelGraphicsView::notifySceneWheelInEventHandler() {
+    this->_sceneWheelInEventHandler();
+}
+
+void ModelGraphicsView::notifySceneWheelOutEventHandler() {
+    this->_sceneWheelOutEventHandler();
+}
+
 void ModelGraphicsView::notifySceneGraphicalModelEventHandler(GraphicalModelEvent* modelGraphicsEvent) {
 	if (_notifyGraphicalModelEventHandlers)
 		this->_sceneGraphicalModelEventHandler(modelGraphicsEvent);

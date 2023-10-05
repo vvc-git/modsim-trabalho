@@ -277,9 +277,15 @@ void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEv
 
 void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent) {
 	QGraphicsScene::wheelEvent(wheelEvent);
-	if (_controlIsPressed) {
-		//@TODO: ZOOM!!
-	}
+    if (_controlIsPressed){
+        if (wheelEvent->delta() > 0){
+            ((ModelGraphicsView *)(this->parent()))->notifySceneWheelInEventHandler();
+        }
+        else{
+            ((ModelGraphicsView *)(this->parent()))->notifySceneWheelOutEventHandler();
+        }
+        wheelEvent->accept();
+    }
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalEntities() const {

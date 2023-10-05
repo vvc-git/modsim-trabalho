@@ -1188,6 +1188,16 @@ void MainWindow::_onSceneMouseEvent(QGraphicsSceneMouseEvent* mouseEvent) {
 	ui->labelMousePos->setText(QString::fromStdString("<" + std::to_string((int) pos.x()) + "," + std::to_string((int) pos.y()) + ">"));
 }
 
+void MainWindow::_onSceneWheelInEvent() {
+    int value = ui->horizontalSlider_ZoomGraphical->value();
+    ui->horizontalSlider_ZoomGraphical->setValue(value + TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
+void MainWindow::_onSceneWheelOutEvent() {
+    int value = ui->horizontalSlider_ZoomGraphical->value();
+    ui->horizontalSlider_ZoomGraphical->setValue(value - TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
 void MainWindow::_onSceneGraphicalModelEvent(GraphicalModelEvent* event) {
 	_actualizeTabPanes();
 }
@@ -1231,8 +1241,10 @@ void MainWindow::sceneGraphicalModelChanged() {
 //-----------------------------------------
 
 void MainWindow::_initModelGraphicsView() {
-	((ModelGraphicsView*) (ui->graphicsView))->setSceneMouseEventHandler(this, &MainWindow::_onSceneMouseEvent);
-	((ModelGraphicsView*) (ui->graphicsView))->setGraphicalModelEventHandler(this, &MainWindow::_onSceneGraphicalModelEvent);
+    ((ModelGraphicsView*) (ui->graphicsView))->setSceneMouseEventHandler(this, &MainWindow::_onSceneMouseEvent);
+    ((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelInEventHandler(this, &MainWindow::_onSceneWheelInEvent);
+    ((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelOutEventHandler(this, &MainWindow::_onSceneWheelOutEvent);
+    ((ModelGraphicsView*) (ui->graphicsView))->setGraphicalModelEventHandler(this, &MainWindow::_onSceneGraphicalModelEvent);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::changed, this, &MainWindow::sceneChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::focusItemChanged, this, &MainWindow::sceneFocusItemChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::selectionChanged, this, &MainWindow::sceneSelectionChanged);
