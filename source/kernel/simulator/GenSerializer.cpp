@@ -25,15 +25,15 @@ bool GenSerializer::dump(std::ostream& output) {
 
 	fields->clear();
 	found = get("SimulatorInfo", fields.get()) ? true : get("Simulator", fields.get());
-	if (found) output << linearize(fields.get());
+	if (found) output << linearize(fields.get()) << "\n";
 
 	fields->clear();
 	found = get("ModelInfo", fields.get());
-	if (found) output << linearize(fields.get());
+	if (found) output << linearize(fields.get()) << "\n";
 
 	fields->clear();
 	found = get("ModelSimulation", fields.get());
-	if (found) output << linearize(fields.get());
+	if (found) output << linearize(fields.get()) << "\n";
 
 	output << "\n# Model Data Definitions\n";
 	err = for_each([&](auto& key) {

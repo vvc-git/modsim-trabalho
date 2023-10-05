@@ -166,7 +166,7 @@ bool MainWindow::_saveTextModel(QFile *saveFile, QString data)
     try
     {
         static const QRegularExpression regex("[\n]");
-        QStringList strList = data.split(regex, Qt::SkipEmptyParts);
+        QStringList strList = data.split(regex);
         for (const QString &line : strList)
         {
             out << line << Qt::endl;
