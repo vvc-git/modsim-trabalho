@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Genesys Simulator
 	simulator = new Simulator();
     simulator->getTracer()->setTraceLevel(TraitsApp<GenesysApplication_if>::traceLevel);
-	simulator->getTracer()->addTraceHandler<MainWindow>(this, &MainWindow::_simulatorTraceHandler);
+    simulator->getTracer()->addTraceHandler<MainWindow>(this, &MainWindow::_simulatorTraceHandler);
 	simulator->getTracer()->addTraceErrorHandler<MainWindow>(this, &MainWindow::_simulatorTraceErrorHandler);
 	simulator->getTracer()->addTraceReportHandler<MainWindow>(this, &MainWindow::_simulatorTraceReportsHandler);
 	simulator->getTracer()->addTraceSimulationHandler<MainWindow>(this, &MainWindow::_simulatorTraceSimulationHandler);
@@ -302,8 +302,8 @@ void MainWindow::_actualizeActions() {
 	unsigned int maxCommandundoRedo = 0; //@TODO
 	if (opened) {
 		running = simulator->getModels()->current()->getSimulation()->isRunning();
-		paused = simulator->getModels()->current()->getSimulation()->isPaused();
-		numSelectedGraphicals = 0;//@TODO get total of selected graphical objects (this should br on another "actualize", I think
+        paused = simulator->getModels()->current()->getSimulation()->isPaused();
+        numSelectedGraphicals = 0;//@TODO get total of selected graphical objects (this should br on another "actualize", I think
 	}
 	//
 	ui->graphicsView->setEnabled(opened);
@@ -337,7 +337,9 @@ void MainWindow::_actualizeActions() {
 
 	// based on SELECTED GRAPHICAL OBJECTS or on COMMANDS DONE (UNDO/REDO)
 	ui->toolBarArranje->setEnabled(numSelectedGraphicals>0);
-	ui->actionEditCopy->setEnabled(numSelectedGraphicals>0);
+	// TODO: MUDAR, ESTÁ HARDCODED, DEVERIA SER DISPONIBILIZADO COM UM COMPONENENTE FOSSE 
+	// TODO: SELECIONADO
+    ui->actionEditCopy->setEnabled(1);
 	ui->actionEditCut->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditDelete->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
@@ -1711,7 +1713,7 @@ void MainWindow::on_actionAboutGetInvolved_triggered() {
 }
 
 void MainWindow::on_actionEditUndo_triggered() {
-	_showMessageNotImplemented();
+    _showMessageNotImplemented();
 }
 
 
@@ -1736,7 +1738,47 @@ void MainWindow::on_actionEditCut_triggered() {
 
 
 void MainWindow::on_actionEditCopy_triggered() {
-	_showMessageNotImplemented();
+    //_showMessageNotImplemented();
+    // PARA DEPOIS ui->graphicsView->actions().
+
+
+    if (ui->graphicsView->scene()->selectedItems().size() > 0) {
+
+        // Cena
+        ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+        // Componenente sendo selecionado
+        QGraphicsItem * item = ui->graphicsView->scene()->selectedItems().at(0);
+
+        // Trasnformando em um elemento grafico de modelo
+        GraphicalModelComponent* previous = (GraphicalModelComponent*) item;
+
+        // Componente
+        ModelComponent * previousComp = previous->getComponent();
+
+        // Nome do plugin para a copia do componente
+        std::string pluginname = previousComp->getClassname();
+
+        // Plugin para a copia do novo component
+        Plugin* plugin = simulator->getPlugins()->find(pluginname);
+
+        // Copia do componente
+        // ModelComponent * newComp = ModelComponent(modelo, componentTypename, name);
+        ModelComponent* component = (ModelComponent*) plugin->newInstance(simulator->getModels()->current());
+
+        // Ajustando a posicao da copia
+        QPointF position;
+        position.setX(item->pos().x()+150);
+        position.setY(item->pos().y()+150);
+
+        // Copiando a cor
+        QColor color = previous->getColor();
+
+
+        // Desenho na tela
+        scene->addGraphicalModelComponent(plugin, component, position, color);
+
+    }
 }
 
 

@@ -29,6 +29,7 @@ public:
 	ModelComponent* getComponent() const;
 	QList<GraphicalComponentPort *> getGraphicalInputPorts() const;
 	QList<GraphicalComponentPort *> getGraphicalOutputPorts() const;
+    QColor getColor() const;
 private:
 	QColor myrgba(uint64_t color); // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error
 protected: // virtual
