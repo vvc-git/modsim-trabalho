@@ -33,11 +33,13 @@
 #include <QtWidgets/qgraphicssceneevent.h>
 #include <QTreeWidget>
 #include <QMessageBox>
+#include <QUndoCommand>
 #include "ModelGraphicsScene.h"
 #include "ModelGraphicsView.h"
 #include "graphicals/GraphicalModelComponent.h"
 #include "graphicals/GraphicalComponentPort.h"
 #include "graphicals/GraphicalConnection.h"
+#include "actions/AddUndoCommand.h"
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
 	// grid
@@ -105,7 +107,12 @@ GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* 
 			}
 		}
 	}
-	//notify graphical model change
+
+    // comentar depois
+    QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
+    _undoStack->push(addUndoCommand);
+
+    //notify graphical model change
 	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, graphComp);
 	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 	return graphComp;
@@ -208,11 +215,30 @@ void ModelGraphicsScene::showGrid() {
 	}
 }
 
+QUndoStack* ModelGraphicsScene::getUndoStack() {
+    return _undoStack;
+}
+
+Simulator* ModelGraphicsScene::getSimulator() {
+    return _simulator;
+}
+
+void ModelGraphicsScene::setUndoStack(QUndoStack* undo) {
+    _undoStack = undo;
+}
+
 void ModelGraphicsScene::beginConnection() {
 	_connectingStep = 1;
 	((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
 }
 
+
+void ModelGraphicsScene::addItemToScene(GraphicalModelComponent* item) {
+    QGraphicsItem* item2 = static_cast<QGraphicsItem *>(item);
+    std::string nome = item->getComponent()->getName();
+
+    QGraphicsScene::addItem(item2);
+}
 
 //-------------------------
 // PROTECTED VIRTUAL FUNCTIONS

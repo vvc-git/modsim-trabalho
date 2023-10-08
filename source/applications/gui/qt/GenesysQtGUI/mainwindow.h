@@ -5,7 +5,7 @@
 #include <QListWidget>
 #include <QTreeWidgetItem>
 #include <QGraphicsItem>
-
+#include <QUndoView>
 
 #include "../../../../kernel/simulator/Simulator.h"
 #include "../../../../kernel/simulator/TraceManager.h"
@@ -180,6 +180,7 @@ private: // view
 	void _initModelGraphicsView();
 	void _initUiForNewModel(Model* m);
 	void _actualizeActions();
+    void _actualizeUndo();
 	void _actualizeTabPanes();
 	void _actualizeModelSimLanguage();
 	void _actualizeModelTextHasChanged(bool hasChanged);
@@ -236,6 +237,8 @@ private:
 		const int TabReportResultIndex = 1;
 		const int TabReportPlotIndex = 2;
 	} CONST;
+
+    QUndoView *undoView = nullptr;
 	//CodeEditor* textCodeEdit_Model;
 };
 #endif // MAINWINDOW_H

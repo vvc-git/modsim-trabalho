@@ -36,6 +36,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGraphicsRectItem>
 #include <QTreeWidgetItem>
+#include <QUndoStack>
 #include "graphicals/GraphicalModelComponent.h"
 #include "graphicals/GraphicalComponentPort.h"
 #include "TraitsGUI.h"
@@ -86,12 +87,16 @@ public: // editing graphic model
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
 	void showGrid();
+    QUndoStack* getUndoStack();
+    Simulator* getSimulator();
+    void setUndoStack(QUndoStack* undo);
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
 	void setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged);
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void addItemToScene(GraphicalModelComponent *item);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -130,6 +135,7 @@ private:
 	Simulator* _simulator = nullptr;
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
+    QUndoStack *_undoStack = nullptr;
 
 private:
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
