@@ -2523,8 +2523,18 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
-	ui->graphicsView->clear();
-	simulator->getModels()->remove(simulator->getModels()->current());
+
+    // limpando tudo a que se refere ao modelo
+    simulator->getModels()->current()->getComponents()->getAllComponents()->clear();
+    simulator->getModels()->current()->getComponents()->clear();
+    simulator->getModels()->remove(simulator->getModels()->current());
+
+    // limpando tudo a que se refere à cena
+    ui->graphicsView->getScene()->getGraphicalModelComponents()->clear();
+    ui->graphicsView->getScene()->clear();
+    ui->graphicsView->scene()->clear();
+    ui->graphicsView->clear();
+
 	_actualizeActions();
 	_actualizeTabPanes();
 	// QMessageBox::information(this, "Close Model", "Model successfully closed");
