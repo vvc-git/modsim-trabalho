@@ -2457,6 +2457,13 @@ void MainWindow::on_actionModelNew_triggered()
 
 void MainWindow::on_actionModelOpen_triggered()
 {
+    Model *m;
+    if ((m = simulator->getModels()->current()) != nullptr) {
+        QMessageBox::StandardButton reply = QMessageBox::question(this, "New Model", "There is a model already oppened. Do you want to close it and to create new model?", QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::No) return;
+        else this->on_actionModelClose_triggered();
+    }
+
     QString fileName = QFileDialog::getOpenFileName(
         this, "Open Model", "./models/",
         tr("Genesys Graphic Model (*.gui)"));
