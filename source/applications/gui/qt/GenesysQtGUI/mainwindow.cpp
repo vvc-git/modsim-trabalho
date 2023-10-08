@@ -1835,6 +1835,9 @@ void MainWindow::on_actionEditPaste_triggered() {
 
             _copied.position.setX(_copied.position.x()+100);
 
+        } else {
+            // Adiciona o componente do modelo
+            simulator->getModels()->current()->getComponents()->insert(_copied.component);
         }
 
         scene->addGraphicalModelComponent(_copied.plugin, _copied.component, _copied.position, _copied.color);
@@ -2239,6 +2242,3 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 	DialogSimulationConfigure* dialog = new DialogSimulationConfigure(this);
 	dialog->show();
 }
-
-
-
