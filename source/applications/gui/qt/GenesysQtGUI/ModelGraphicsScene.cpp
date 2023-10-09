@@ -56,10 +56,10 @@ ModelGraphicsScene::~ModelGraphicsScene() {
 
 //-----------------------------------------------------------------------
 
-GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color) {
-	GraphicalModelComponent* graphComp = new GraphicalModelComponent(plugin, component, position, color);
-	addItem(graphComp);
-	_graphicalModelComponents->append(graphComp);
+GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color, bool undoCreated) {
+    GraphicalModelComponent* graphComp = new GraphicalModelComponent(plugin, component, position, color);
+    addItem(graphComp);
+    _graphicalModelComponents->append(graphComp);
 	if (selectedItems().size() == 1 && plugin->getPluginInfo()->getMinimumInputs() > 0) { // check if there is selected component and crate a connection between them
 		GraphicalModelComponent* otherGraphComp = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(0));
 		if (otherGraphComp != nullptr) { // a component is selected
@@ -108,14 +108,16 @@ GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* 
 		}
 	}
 
-    // comentar depois
-    QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
-    _undoStack->push(addUndoCommand);
+    if (undoCreated == false) {
+        // comentar depois
+        QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
+        _undoStack->push(addUndoCommand);
+    }
 
     //notify graphical model change
-	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, graphComp);
-	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
-	return graphComp;
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, graphComp);
+    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+    return graphComp;
 }
 
 GraphicalConnection* ModelGraphicsScene::addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort) {

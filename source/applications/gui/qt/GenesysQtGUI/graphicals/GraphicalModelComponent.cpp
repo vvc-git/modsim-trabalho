@@ -286,6 +286,14 @@ ModelComponent* GraphicalModelComponent::getComponent() const {
 	return _component;
 }
 
+QColor GraphicalModelComponent::getColor() const {
+    return _color;
+}
+
+qreal GraphicalModelComponent::getHeight() const {
+    return _height;
+}
+
 bool GraphicalModelComponent::sceneEvent(QEvent *event) {
 	QGraphicsObject::sceneEvent(event); // Unnecessary
 }

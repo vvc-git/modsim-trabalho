@@ -18,6 +18,7 @@ public:
 
 private:
     GraphicalModelComponent *myGraphicalModelComponent;
+    GraphicalModelComponent *copyMyGraphicalModelComponent;
     ModelGraphicsScene *myGraphicsScene;
     QPointF initialPosition;
     bool first;
