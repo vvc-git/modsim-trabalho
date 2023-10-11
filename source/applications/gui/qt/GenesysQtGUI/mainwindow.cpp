@@ -6,6 +6,7 @@
 #include "dialogs/dialogsimulationconfigure.h"
 #include "dialogs/dialogpluginmanager.h"
 #include "dialogs/dialogsystempreferences.h"
+#include "dialogs/DialogFind.h"
 // Kernel
 #include "../../../../kernel/simulator/SinkModelComponent.h"
 #include "../../../../kernel/simulator/Attribute.h"
@@ -1723,7 +1724,14 @@ void MainWindow::on_actionEditRedo_triggered() {
 
 
 void MainWindow::on_actionEditFind_triggered() {
-	_showMessageNotImplemented();
+
+        // Cria um novo diálogo para Buscar componentes
+        DialogFind *find = new DialogFind(this, ui->graphicsView->getScene());
+
+        // Mostra esse dialogo na tela
+        find->show();
+
+        if (find->exec() == QDialog::Accepted) find->setFocus();
 }
 
 
