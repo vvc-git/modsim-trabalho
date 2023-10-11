@@ -2187,4 +2187,3 @@ void MainWindow::on_actionArranjeBototm_triggered()
     ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
     scene->arranjeModels(3);
 }
-
