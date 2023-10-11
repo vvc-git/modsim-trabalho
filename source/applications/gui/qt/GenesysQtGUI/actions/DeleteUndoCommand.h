@@ -2,24 +2,25 @@
 #define DELETEUNDOCOMMAND_H
 
 #include <QUndoCommand>
-#include "ModelGraphicsView.h"
 #include "ModelGraphicsScene.h"
 #include "graphicals/GraphicalModelComponent.h"
 
 class DeleteUndoCommand : public QUndoCommand
 {
 public:
-    explicit DeleteUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, QUndoCommand *parent = nullptr);
+    explicit DeleteUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, QUndoStack *stack, QUndoCommand *parent = nullptr);
     ~DeleteUndoCommand();
 
     void undo() override;
     void redo() override;
+    GraphicalModelComponent* getMyGraphicalModelComponent() const;
 
 private:
-    GraphicalModelComponent *myGraphicalModelComponent;
-    ModelGraphicsScene *myGraphicsScene;
-    QPointF initialPosition;
-    bool firstExecution;
+    GraphicalModelComponent *_myGraphicalModelComponent;
+    ModelGraphicsScene *_myGraphicsScene;
+    QPointF _initialPosition;
+    bool _firstExecution;
+    QUndoStack *_myUndoStack = nullptr;
 };
 
 #endif // DELETEUNDOCOMMAND_H

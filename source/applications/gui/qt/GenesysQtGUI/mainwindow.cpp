@@ -2106,11 +2106,13 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
-    ui->graphicsView->getScene()->clearGraphicalModelComponents();
+
     ui->graphicsView->getScene()->getUndoStack()->clear();
 	ui->graphicsView->clear();
-	simulator->getModels()->remove(simulator->getModels()->current());
-	_actualizeActions();
+
+    simulator->getModels()->remove(simulator->getModels()->current());
+
+    _actualizeActions();
 	_actualizeTabPanes();
 	//QMessageBox::information(this, "Close Model", "Model successfully closed");
 }

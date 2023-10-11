@@ -43,9 +43,9 @@
 #include "actions/DeleteUndoCommand.h"
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
-	// grid
-	_grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
-	_grid.pen.setStyle(Qt::DotLine);
+    // grid
+    _grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
+    _grid.pen.setStyle(Qt::DotLine);
 }
 
 ModelGraphicsScene::ModelGraphicsScene(const ModelGraphicsScene& orig) { // : QGraphicsScene(orig) {
@@ -57,66 +57,70 @@ ModelGraphicsScene::~ModelGraphicsScene() {
 
 //-----------------------------------------------------------------------
 
-GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color) {
-    // cria o componente gráfico
+GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color, bool undoCreated) {
     GraphicalModelComponent* graphComp = new GraphicalModelComponent(plugin, component, position, color);
 
-    // cria as conexoes
-	if (selectedItems().size() == 1 && plugin->getPluginInfo()->getMinimumInputs() > 0) { // check if there is selected component and crate a connection between them
-		GraphicalModelComponent* otherGraphComp = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(0));
-		if (otherGraphComp != nullptr) { // a component is selected
-			ModelComponent* otherComp = otherGraphComp->getComponent();
-			unsigned int i = 0;
-			bool connCreated = false;
-			while (i < otherComp->getConnections()->getMaxOutputConnections() && !connCreated) {
-				if (otherComp->getConnections()->getConnectionAtPort(i) == nullptr) {
-					// create connection (both model and grapically, since model is being built
-					// model
-					otherGraphComp->getComponent()->getConnections()->insertAtPort(i, new Connection({component, 0}));
-					//graphically
-					_sourceGraphicalComponentPort = ((GraphicalModelComponent*) selectedItems().at(0))->getGraphicalOutputPorts().at(i);
-					GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
-					addGraphicalConnection(_sourceGraphicalComponentPort, destport);
-					connCreated = true;
-				}
-				i++;
-			}
-			if (!connCreated && otherComp->getConnections()->size() < plugin->getPluginInfo()->getMaximumOutputs()) {
-				// create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
-				// model
-				i = otherComp->getConnections()->size();
-				otherGraphComp->getComponent()->getConnections()->insertAtPort(i, new Connection({component, 0}));
-				//graphically
-				_sourceGraphicalComponentPort = ((GraphicalModelComponent*) selectedItems().at(0))->getGraphicalOutputPorts().at(i);
-				GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
-				addGraphicalConnection(_sourceGraphicalComponentPort, destport);
-			}
-		} else {
-			GraphicalComponentPort* sourceGraphPort = dynamic_cast<GraphicalComponentPort*> (selectedItems().at(0));
-			if (sourceGraphPort != nullptr) { // a specific output port of a component is selected.
-				if (sourceGraphPort->getConnections()->size() == 0) {
-					// create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
-					otherGraphComp = sourceGraphPort->graphicalComponent();
-					ModelComponent* otherComp = otherGraphComp->getComponent();
-					// create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
-					// model
-					otherGraphComp->getComponent()->getConnections()->insertAtPort(sourceGraphPort->portNum(), new Connection({component, 0}));
-					//graphically
-					_sourceGraphicalComponentPort = sourceGraphPort;
-					GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
-					addGraphicalConnection(_sourceGraphicalComponentPort, destport);
-				}
-			}
-		}
-	}
+    addItem(graphComp);
+    _graphicalModelComponents->append(graphComp);
 
-    // adiciona o objeto criado na lista de componentes graficos para nao perder a referencia
-    _allGraphicalModelComponents.append(graphComp);
+    if (selectedItems().size() == 1 && plugin->getPluginInfo()->getMinimumInputs() > 0) { // check if there is selected component and crate a connection between them
+        GraphicalModelComponent* otherGraphComp = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(0));
+        if (otherGraphComp != nullptr) { // a component is selected
+            ModelComponent* otherComp = otherGraphComp->getComponent();
+            unsigned int i = 0;
+            bool connCreated = false;
+            while (i < otherComp->getConnections()->getMaxOutputConnections() && !connCreated) {
+                if (otherComp->getConnections()->getConnectionAtPort(i) == nullptr) {
+                    // create connection (both model and grapically, since model is being built
+                    // model
+                    otherGraphComp->getComponent()->getConnections()->insertAtPort(i, new Connection({component, 0}));
+                    //graphically
+                    _sourceGraphicalComponentPort = ((GraphicalModelComponent*) selectedItems().at(0))->getGraphicalOutputPorts().at(i);
+                    GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
+                    addGraphicalConnection(_sourceGraphicalComponentPort, destport);
+                    connCreated = true;
+                }
+                i++;
+            }
+            if (!connCreated && otherComp->getConnections()->size() < plugin->getPluginInfo()->getMaximumOutputs()) {
+                // create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
+                // model
+                i = otherComp->getConnections()->size();
+                otherGraphComp->getComponent()->getConnections()->insertAtPort(i, new Connection({component, 0}));
+                //graphically
+                _sourceGraphicalComponentPort = ((GraphicalModelComponent*) selectedItems().at(0))->getGraphicalOutputPorts().at(i);
+                GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
+                addGraphicalConnection(_sourceGraphicalComponentPort, destport);
+            }
+        } else {
+            GraphicalComponentPort* sourceGraphPort = dynamic_cast<GraphicalComponentPort*> (selectedItems().at(0));
+            if (sourceGraphPort != nullptr) { // a specific output port of a component is selected.
+                if (sourceGraphPort->getConnections()->size() == 0) {
+                    // create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
+                    otherGraphComp = sourceGraphPort->graphicalComponent();
+                    ModelComponent* otherComp = otherGraphComp->getComponent();
+                    // create connection (both model and grapically, since model is being built (ALMOST REPEATED CODE -- REFACTOR)
+                    // model
+                    otherGraphComp->getComponent()->getConnections()->insertAtPort(sourceGraphPort->portNum(), new Connection({component, 0}));
+                    //graphically
+                    _sourceGraphicalComponentPort = sourceGraphPort;
+                    GraphicalComponentPort* destport = graphComp->getGraphicalInputPorts().at(0);
+                    addGraphicalConnection(_sourceGraphicalComponentPort, destport);
+                }
+            }
+        }
+    }
 
-    // cria um objeto para undo e redo do add
-    // ele propriamente adiciona o objeto na tela
-    QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
-    _undoStack->push(addUndoCommand);
+    if (undoCreated == false) {
+        QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this, _undoStack);
+        _undoStack->push(addUndoCommand);
+    }
+
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, graphComp);
+    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+
+    return graphComp;
 }
 
 GraphicalConnection* ModelGraphicsScene::addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort) {
@@ -126,99 +130,97 @@ GraphicalConnection* ModelGraphicsScene::addGraphicalConnection(GraphicalCompone
     _graphicalConnections->append(graphicconnection);
 
     //notify graphical model change
-	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::CONNECTION, graphicconnection);
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::CONNECTION, graphicconnection);
     dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 
     return graphicconnection;
 }
 
-void ModelGraphicsScene::addDrawing() {
+void ModelGraphicsScene::addDrawing() {}
 
-}
-
-void ModelGraphicsScene::addAnimation() {
-
-}
+void ModelGraphicsScene::addAnimation() {}
 
 void ModelGraphicsScene::removeModelComponentInModel(GraphicalModelComponent* gmc) {
-	ModelComponent* component = gmc->getComponent();
-	Model* model = _simulator->getModels()->current();
-	model->getComponents()->remove(component);
+    ModelComponent* component = gmc->getComponent();
+    Model* model = _simulator->getModels()->current();
+    model->getComponents()->remove(component);
 }
 
-void ModelGraphicsScene::removeGraphicalModelComponent(GraphicalModelComponent* gmc) {
-    // cria um objeto para undo e redo do delete
-    // ele propriamente remove o objeto na tela
-    QUndoCommand *deleteUndoCommand = new DeleteUndoCommand(gmc, this);
-    _undoStack->push(deleteUndoCommand);
-}
+void ModelGraphicsScene::removeGraphicalModelComponent(GraphicalModelComponent* gmc, bool undoCreated) {
+    if (undoCreated == false) {
+        QUndoCommand *deleteUndoCommand = new DeleteUndoCommand(gmc, this, _undoStack);
+        _undoStack->push(deleteUndoCommand);
 
-void ModelGraphicsScene::clearGraphicalModelComponents() {
-    // limpa todos os componentes no final, desfazendo as conexoes
-    for (GraphicalModelComponent* gmc : _allGraphicalModelComponents) {
-        for (GraphicalComponentPort* port : gmc->getGraphicalInputPorts()) {
-            for (GraphicalConnection* graphConn : *port->getConnections()) {
-                removeGraphicalConnection(graphConn);
-            }
-        }
-
-        for (GraphicalComponentPort* port : gmc->getGraphicalOutputPorts()) {
-            for (GraphicalConnection* graphConn : *port->getConnections()) {
-                removeGraphicalConnection(graphConn);
-            }
-        }
-
-        // remove da lista de componentes graficos
-        _allGraphicalModelComponents.removeOne(gmc);
-
-        // libera o ponteiro alocado
-        delete gmc;
+        return;
     }
+
+    // remove graphically
+    /// first remove connections
+    for (GraphicalComponentPort* port : gmc->getGraphicalInputPorts()) {
+        for (GraphicalConnection* graphConn : *port->getConnections()) {
+            removeGraphicalConnection(graphConn);
+        }
+    }
+
+    for (GraphicalComponentPort* port : gmc->getGraphicalOutputPorts()) {
+        for (GraphicalConnection* graphConn : *port->getConnections()) {
+            removeGraphicalConnection(graphConn);
+        }
+    }
+
+    /// then remove the component
+    // remove in model
+    removeModelComponentInModel(gmc);
+
+    //graphically
+    removeItem(gmc);
+    _graphicalModelComponents->removeOne(gmc);
+
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, nullptr); // notify AFTER destroy or BEFORE it?
+    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
 void ModelGraphicsScene::removeConnectionInModel(GraphicalConnection* gc) {
-	ModelComponent* sourceComp = gc->getSource()->component;
-	sourceComp->getConnections()->removeAtPort(gc->getSource()->channel.portNumber);
+    ModelComponent* sourceComp = gc->getSource()->component;
+    sourceComp->getConnections()->removeAtPort(gc->getSource()->channel.portNumber);
 }
 
 void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
-	// remove in model
+    // remove in model
     removeConnectionInModel(gc);
-
     // remove graphically
-	removeItem(gc);
+    removeItem(gc);
     _graphicalConnections->removeOne(gc);
-
-	//notify graphical model change
-	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::CONNECTION, nullptr); // notify AFTER destroy or BEFORE it?
-	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+    // //////gc->~GraphicalConnection();
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::CONNECTION, nullptr); // notify AFTER destroy or BEFORE it?
+    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
 void ModelGraphicsScene::removeDrawing() {}
 
 void ModelGraphicsScene::removeAnimation() {}
 
-
 //------------------------------------------------------------------------
 
-
 void ModelGraphicsScene::showGrid() {
-	// remove existing grid
-	if (items().size() > 0) {
-	//	for (QGraphicsLineItem* line : *_grid.lines) {
-	//		removeItem((QGraphicsItem*) line);
-	//	}
-	}
-	_grid.lines->clear();
-	// add new grid
-	for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
-		QGraphicsLineItem* line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
-	}
-	for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
-		QGraphicsLineItem* line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
-	}
+    // remove existing grid
+    if (items().size() > 0) {
+    //	for (QGraphicsLineItem* line : *_grid.lines) {
+    //		removeItem((QGraphicsItem*) line);
+    //	}
+    }
+    _grid.lines->clear();
+    // add new grid
+    for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
+        QGraphicsLineItem* line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
+    //	_grid.lines->insert(_grid.lines->end(), line);
+    }
+    for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
+        QGraphicsLineItem* line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
+    //	_grid.lines->insert(_grid.lines->end(), line);
+    }
 }
 
 QUndoStack* ModelGraphicsScene::getUndoStack() {
@@ -234,16 +236,8 @@ void ModelGraphicsScene::setUndoStack(QUndoStack* undo) {
 }
 
 void ModelGraphicsScene::beginConnection() {
-	_connectingStep = 1;
-	((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
-}
-
-
-void ModelGraphicsScene::addItemToScene(GraphicalModelComponent* item) {
-    QGraphicsItem* item2 = static_cast<QGraphicsItem *>(item);
-    std::string nome = item->getComponent()->getName();
-
-    QGraphicsScene::addItem(item2);
+    _connectingStep = 1;
+    ((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
 }
 
 //-------------------------
@@ -251,7 +245,7 @@ void ModelGraphicsScene::addItemToScene(GraphicalModelComponent* item) {
 //-------------------------
 
 void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-	QGraphicsScene::mousePressEvent(mouseEvent);
+    QGraphicsScene::mousePressEvent(mouseEvent);
     if (mouseEvent->button() == Qt::LeftButton) {
         QGraphicsItem* item = this->itemAt(mouseEvent->scenePos(), QTransform());
         if (_connectingStep > 0) {
@@ -292,167 +286,167 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 }
 
 void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-	QGraphicsScene::mouseReleaseEvent(mouseEvent);
+    QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }
 
 void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-	QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
-	GraphicalComponentPort* port = dynamic_cast<GraphicalComponentPort*> (this->itemAt(mouseEvent->scenePos(), QTransform()));
+    QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
+    GraphicalComponentPort* port = dynamic_cast<GraphicalComponentPort*> (this->itemAt(mouseEvent->scenePos(), QTransform()));
     if (port != nullptr) { // if doubleclick on a port, then start connecting
-		if (!port->isInputPort() && this->_connectingStep == 0) {
-			_sourceGraphicalComponentPort = port;
-			_connectingStep = 2;
+        if (!port->isInputPort() && this->_connectingStep == 0) {
+            _sourceGraphicalComponentPort = port;
+            _connectingStep = 2;
 
-		}
-	}
+        }
+    }
 }
 
 void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent) {
-	QGraphicsScene::wheelEvent(wheelEvent);
-	if (_controlIsPressed) {
-		//@TODO: ZOOM!!
-	}
+    QGraphicsScene::wheelEvent(wheelEvent);
+    if (_controlIsPressed) {
+        //@TODO: ZOOM!!
+    }
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalEntities() const {
-	return _graphicalEntities;
+    return _graphicalEntities;
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalAnimations() const {
-	return _graphicalAnimations;
+    return _graphicalAnimations;
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalDrawings() const {
-	return _graphicalDrawings;
+    return _graphicalDrawings;
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalConnections() const {
-	return _graphicalConnections;
+    return _graphicalConnections;
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalModelComponents() const {
-	return _graphicalModelComponents;
+    return _graphicalModelComponents;
 }
 
 void ModelGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-	QGraphicsScene::mouseMoveEvent(mouseEvent);
-	((ModelGraphicsView *) (this->parent()))->notifySceneMouseEventHandler(mouseEvent); // to show coords
-	if (_connectingStep > 0) {
-		QGraphicsItem* item = this->itemAt(mouseEvent->scenePos(), QTransform());
-		if (item != nullptr) {
-			GraphicalComponentPort* port = dynamic_cast<GraphicalComponentPort*> (item);
-			if (port != nullptr) {
-				if (_connectingStep == 1 && !port->isInputPort()) {
-					((ModelGraphicsView *) (this->parent()))->setCursor(Qt::PointingHandCursor);
-				} else if (_connectingStep == 2 && port->isInputPort()) {
-					((ModelGraphicsView *) (this->parent()))->setCursor(Qt::PointingHandCursor);
-				}
-				return;
-			}
-		}
-		if (_connectingStep > 1) {
-			((ModelGraphicsView *) (this->parent()))->setCursor(Qt::ClosedHandCursor);
-		} else {
-			((ModelGraphicsView *) (this->parent()))->setCursor(Qt::CrossCursor);
-		}
-	}
+    QGraphicsScene::mouseMoveEvent(mouseEvent);
+    ((ModelGraphicsView *) (this->parent()))->notifySceneMouseEventHandler(mouseEvent); // to show coords
+    if (_connectingStep > 0) {
+        QGraphicsItem* item = this->itemAt(mouseEvent->scenePos(), QTransform());
+        if (item != nullptr) {
+            GraphicalComponentPort* port = dynamic_cast<GraphicalComponentPort*> (item);
+            if (port != nullptr) {
+                if (_connectingStep == 1 && !port->isInputPort()) {
+                    ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::PointingHandCursor);
+                } else if (_connectingStep == 2 && port->isInputPort()) {
+                    ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::PointingHandCursor);
+                }
+                return;
+            }
+        }
+        if (_connectingStep > 1) {
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::ClosedHandCursor);
+        } else {
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::CrossCursor);
+        }
+    }
 }
 
 void ModelGraphicsScene::focusInEvent(QFocusEvent *focusEvent) {
-	QGraphicsScene::focusInEvent(focusEvent);
+    QGraphicsScene::focusInEvent(focusEvent);
 }
 
 void ModelGraphicsScene::focusOutEvent(QFocusEvent *focusEvent) {
-	QGraphicsScene::focusOutEvent(focusEvent);
+    QGraphicsScene::focusOutEvent(focusEvent);
 }
 
 void ModelGraphicsScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
-	QGraphicsScene::dropEvent(event);
-	if (this->_objectBeingDragged != nullptr) {
-		QTreeWidgetItem* treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
-		if (treeItem != nullptr) {			
-			QColor color = treeItem->foreground(0).color(); // treeItem->textColor(0);
-			QString pluginname = treeItem->whatsThis(0);
-			Plugin* plugin = _simulator->getPlugins()->find(pluginname.toStdString());
-			if (plugin != nullptr) {
-				if (plugin->getPluginInfo()->isComponent()) {
-					event->setDropAction(Qt::IgnoreAction);
-					event->accept();
-					// create component in the model
-					ModelComponent* component = (ModelComponent*) plugin->newInstance(_simulator->getModels()->current());
-					// create graphically
-					addGraphicalModelComponent(plugin, component, event->scenePos(), color);
-					return;
-				}
-			}
-		}
-	}
-	event->setAccepted(false);
+    QGraphicsScene::dropEvent(event);
+    if (this->_objectBeingDragged != nullptr) {
+        QTreeWidgetItem* treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
+        if (treeItem != nullptr) {
+            QColor color = treeItem->foreground(0).color(); // treeItem->textColor(0);
+            QString pluginname = treeItem->whatsThis(0);
+            Plugin* plugin = _simulator->getPlugins()->find(pluginname.toStdString());
+            if (plugin != nullptr) {
+                if (plugin->getPluginInfo()->isComponent()) {
+                    event->setDropAction(Qt::IgnoreAction);
+                    event->accept();
+                    // create component in the model
+                    ModelComponent* component = (ModelComponent*) plugin->newInstance(_simulator->getModels()->current());
+                    // create graphically
+                    addGraphicalModelComponent(plugin, component, event->scenePos(), color);
+                    return;
+                }
+            }
+        }
+    }
+    event->setAccepted(false);
 }
 
 void ModelGraphicsScene::contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent) {
-	QGraphicsScene::contextMenuEvent(contextMenuEvent);
+    QGraphicsScene::contextMenuEvent(contextMenuEvent);
 }
 
 void ModelGraphicsScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event) {
-	QGraphicsScene::dragEnterEvent(event);
-	//QString name;
-	//Plugin* plugin = _simulator->getPlugins()->find(name.toStdString());
-	//if(true) {//(plugin != nullptr) {
-	event->setDropAction(Qt::CopyAction);
-	event->accept();
-	//}
+    QGraphicsScene::dragEnterEvent(event);
+    //QString name;
+    //Plugin* plugin = _simulator->getPlugins()->find(name.toStdString());
+    //if(true) {//(plugin != nullptr) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+    //}
 }
 
 void ModelGraphicsScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event) {
-	QGraphicsScene::dragLeaveEvent(event);
-	event->setDropAction(Qt::CopyAction);
-	event->accept();
+    QGraphicsScene::dragLeaveEvent(event);
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
 }
 
 void ModelGraphicsScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event) {
-	QGraphicsScene::dragMoveEvent(event);
-	event->setDropAction(Qt::CopyAction);
-	event->accept();
+    QGraphicsScene::dragMoveEvent(event);
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
 }
 
 void ModelGraphicsScene::keyPressEvent(QKeyEvent *keyEvent) {
-	QGraphicsScene::keyPressEvent(keyEvent);
-	QList<QGraphicsItem*> selected = this->selectedItems();
-	if (keyEvent->key() == Qt::Key_Delete && selected.size() > 0) {
-		QMessageBox::StandardButton reply = QMessageBox::question(this->_parentWidget, "Delete Component", "Are you sure you want to delete the selected components?", QMessageBox::Yes | QMessageBox::No);
-		if (reply == QMessageBox::No) {
-			return;
-		}
-		Model* model = _simulator->getModels()->current();
-		for (QGraphicsItem* item : selected) {
-			GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*> (item);
-			if (gmc != nullptr) {
-				// remove in model
-				removeModelComponentInModel(gmc);
-				// graphically
-				removeGraphicalModelComponent(gmc);
-			} else {
-				GraphicalConnection* gc = dynamic_cast<GraphicalConnection*> (item);
-				if (gc != nullptr) {
-					removeGraphicalConnection(gc);
-				} else {
-					//Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
-					//if (gc != nullptr) {
-					//	removeItem(item);
-					//	gc->~Drawing();
-					//}
-				}
-			}
-		}
-	}
-	_controlIsPressed = (keyEvent->key() == Qt::Key_Control);
+    QGraphicsScene::keyPressEvent(keyEvent);
+    QList<QGraphicsItem*> selected = this->selectedItems();
+    if (keyEvent->key() == Qt::Key_Delete && selected.size() > 0) {
+        QMessageBox::StandardButton reply = QMessageBox::question(this->_parentWidget, "Delete Component", "Are you sure you want to delete the selected components?", QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::No) {
+            return;
+        }
+        Model* model = _simulator->getModels()->current();
+        for (QGraphicsItem* item : selected) {
+            GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*> (item);
+            if (gmc != nullptr) {
+                // remove in model
+                removeModelComponentInModel(gmc);
+                // graphically
+                removeGraphicalModelComponent(gmc);
+            } else {
+                GraphicalConnection* gc = dynamic_cast<GraphicalConnection*> (item);
+                if (gc != nullptr) {
+                    removeGraphicalConnection(gc);
+                } else {
+                    //Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
+                    //if (gc != nullptr) {
+                    //	removeItem(item);
+                    //	gc->~Drawing();
+                    //}
+                }
+            }
+        }
+    }
+    _controlIsPressed = (keyEvent->key() == Qt::Key_Control);
 }
 
 void ModelGraphicsScene::keyReleaseEvent(QKeyEvent *keyEvent) {
-	QGraphicsScene::keyReleaseEvent(keyEvent);
-	if (_controlIsPressed)
-		_controlIsPressed = (keyEvent->key() != Qt::Key_Control);
+    QGraphicsScene::keyReleaseEvent(keyEvent);
+    if (_controlIsPressed)
+        _controlIsPressed = (keyEvent->key() != Qt::Key_Control);
 }
 
 //--------------------------
@@ -460,35 +454,35 @@ void ModelGraphicsScene::keyReleaseEvent(QKeyEvent *keyEvent) {
 //--------------------------
 
 void ModelGraphicsScene::setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged) {
-	_objectBeingDragged = objectBeingDragged;
+    _objectBeingDragged = objectBeingDragged;
 }
 
 void ModelGraphicsScene::setSimulator(Simulator *simulator) {
-	_simulator = simulator;
+    _simulator = simulator;
 }
 
 unsigned short ModelGraphicsScene::connectingStep() const {
-	return _connectingStep;
+    return _connectingStep;
 }
 
 void ModelGraphicsScene::setConnectingStep(unsigned short connectingStep) {
-	_connectingStep = connectingStep;
+    _connectingStep = connectingStep;
 }
 
 void ModelGraphicsScene::setParentWidget(QWidget *parentWidget) {
-	_parentWidget = parentWidget;
+    _parentWidget = parentWidget;
 }
 
 /*
 QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelMomponentItems(){
-	QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();
-	for(QGraphicsItem* item: this->items()) {
-		GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*>(item);
-		if (gmc != nullptr) {
-			list->append(gmc);
-		}
-	}
-	return list;
+    QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();
+    for(QGraphicsItem* item: this->items()) {
+        GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*>(item);
+        if (gmc != nullptr) {
+            list->append(gmc);
+        }
+    }
+    return list;
 }
  */
 
