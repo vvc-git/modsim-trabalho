@@ -1,8 +1,8 @@
 #include "AddUndoCommand.h"
+#include "ModelGraphicsView.h"
 
 AddUndoCommand::AddUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, QUndoCommand *parent)
     : QUndoCommand(parent), myGraphicalModelComponent(gmc), myGraphicsScene(scene) {
-    firstExecution = true;
     initialPosition = QPointF(gmc->scenePos().x(), gmc->scenePos().y() + gmc->getHeight()/2);
 
     std::string position = "position=(x=" + std::to_string(gmc->scenePos().x()) + ", y=" + std::to_string(gmc->scenePos().y()) + ")";
@@ -15,7 +15,7 @@ AddUndoCommand::AddUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene 
 AddUndoCommand::~AddUndoCommand() {}
 
 void AddUndoCommand::undo() {
-    // remove in model
+    //remove in model
     myGraphicsScene->removeModelComponentInModel(myGraphicalModelComponent);
 
     //graphically
@@ -28,6 +28,10 @@ void AddUndoCommand::undo() {
 }
 
 void AddUndoCommand::redo() {
+    //add in model
+    myGraphicsScene->getSimulator()->getModels()->current()->insert(myGraphicalModelComponent->getComponent());
+
+    //graphically
     myGraphicsScene->addItem(myGraphicalModelComponent);
     myGraphicsScene->getGraphicalModelComponents()->append(myGraphicalModelComponent);
 

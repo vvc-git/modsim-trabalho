@@ -2,7 +2,6 @@
 #define DELETEUNDOCOMMAND_H
 
 #include <QUndoCommand>
-#include "ModelGraphicsView.h"
 #include "ModelGraphicsScene.h"
 #include "graphicals/GraphicalModelComponent.h"
 
@@ -19,7 +18,6 @@ private:
     GraphicalModelComponent *myGraphicalModelComponent;
     ModelGraphicsScene *myGraphicsScene;
     QPointF initialPosition;
-    bool firstExecution;
 };
 
 #endif // DELETEUNDOCOMMAND_H
