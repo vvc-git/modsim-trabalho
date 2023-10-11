@@ -121,6 +121,8 @@ GraphicalConnection* ModelGraphicsScene::addGraphicalConnection(GraphicalCompone
 	return graphicconnection;
 }
 
+
+
 void ModelGraphicsScene::addDrawing() {
 
 }
@@ -188,6 +190,100 @@ void ModelGraphicsScene::removeAnimation() {
 
 
 //------------------------------------------------------------------------
+
+void ModelGraphicsScene::arranjeModels(int direction) {
+	int size = selectedItems().size();
+    qreal most_direction;
+    qreal most_up;
+    qreal most_down;
+    qreal most_left;
+    qreal most_right;
+    qreal middle;
+    qreal center;
+
+	if (size >= 2) {
+		switch (direction) {
+			case 0: //left
+                most_direction = sceneRect().right();
+				break;
+			case 1: //right
+                most_direction = sceneRect().left();
+				break;
+			case 2: //top
+                most_direction = sceneRect().bottom();
+				break;
+			case 3: //bottom
+                most_direction = sceneRect().top();
+				break;
+			case 4: //center
+                most_left = sceneRect().right();
+                most_right = sceneRect().left();
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+                    qreal item_posX = c->x();
+                    if (item_posX < most_left) {
+                        most_left = item_posX;
+					}
+                    if (item_posX > most_right) {
+                        most_right = item_posX;
+					}
+				}
+                center = (most_right + most_left) / 2;
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+					c->setX(center);
+				}
+                break;
+			case 5: //middle
+                most_up = sceneRect().bottom();
+                most_down = sceneRect().top();
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+                    qreal item_posY = c->y();
+                    if (item_posY < most_up) {
+                        most_up = item_posY;
+					}
+                    if (item_posY > most_down) {
+                        most_down = item_posY;
+					}
+				}
+                middle = (most_up + most_down) / 2;
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+                    c->setY(middle);
+				}
+                break;
+		}
+		if (direction < 4) {
+			for (int i =0; i < size; i++) {
+				GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+				if (direction < 2) {
+					qreal item_pos = c->x();
+					if ((item_pos > most_direction && direction == 0) || (item_pos < most_direction && direction == 1) ) {
+						most_direction = item_pos;
+					}
+				} else {
+					qreal item_pos = c->y();
+					if ((item_pos > most_direction && direction == 2) || (item_pos < most_direction && direction == 3) ) {
+						most_direction = item_pos;
+					}
+				}
+			}
+			if (direction < 2) {
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+					c->setX(most_direction);
+				}
+			} else {
+				for (int i =0; i < size; i++) {
+					GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
+					c->setY(most_direction);
+				}
+			}
+		}
+	}
+}
+
 
 void ModelGraphicsScene::showGrid() {
 	// remove existing grid

@@ -92,6 +92,7 @@ public:
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void arranjeModels(int direction);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;

@@ -316,6 +316,7 @@ void MainWindow::_actualizeActions() {
 	//edit
 	ui->toolBarEdit->setEnabled(opened);
 	ui->menuEdit->setEnabled(opened);
+
 	// view
 	ui->menuView->setEnabled(opened);
 	ui->toolBarView->setEnabled(opened);
@@ -336,11 +337,11 @@ void MainWindow::_actualizeActions() {
 	ui->tableWidget_Variables->setEnabled(opened);
 
 	// based on SELECTED GRAPHICAL OBJECTS or on COMMANDS DONE (UNDO/REDO)
-	ui->toolBarArranje->setEnabled(numSelectedGraphicals>0);
+    ui->toolBarArranje->setEnabled(opened);
 	ui->actionEditCopy->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditCut->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditDelete->setEnabled(numSelectedGraphicals>0);
-	ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
+    ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
 	ui->actionEditRedo->setEnabled(actualCommandundoRedo<maxCommandundoRedo);
 
 	// sliders
@@ -349,6 +350,8 @@ void MainWindow::_actualizeActions() {
 		_clearModelEditors();
 	}
 	_modelWasOpened = opened;
+
+
 }
 
 void MainWindow::_actualizeTabPanes() {
@@ -2144,4 +2147,44 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 }
 
 
+void MainWindow::on_actionArranjeLeft_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(0);
+}
+
+
+void MainWindow::on_actionArranjeCenter_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(4);
+}
+
+
+void MainWindow::on_actionArranjeRight_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(1);
+}
+
+
+void MainWindow::on_actionArranjeTop_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(2);
+}
+
+
+void MainWindow::on_actionArranjeMiddle_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(5);
+}
+
+
+void MainWindow::on_actionArranjeBototm_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->arranjeModels(3);
+}
 
