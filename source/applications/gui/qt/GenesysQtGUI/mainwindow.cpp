@@ -2143,5 +2143,16 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 	dialog->show();
 }
 
+void MainWindow::on_actionViewGroup_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->groupComponents();
+}
 
+
+void MainWindow::on_actionViewUngroup_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->ungroupComponents();
+}
 

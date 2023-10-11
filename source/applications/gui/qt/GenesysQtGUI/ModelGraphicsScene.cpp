@@ -213,6 +213,58 @@ void ModelGraphicsScene::beginConnection() {
 	((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
 }
 
+void ModelGraphicsScene::groupComponents() {
+    int size = selectedItems().size();
+    bool component_in_group = false;
+    if (size > 1) {
+        for (int i = 0; (i < size) && !component_in_group; i++) {  //percorrer todos os itens selecionados
+            QGraphicsItem* c = selectedItems().at(i);
+            int num_groups = getGraphicalGroups()->size();
+            if (num_groups > 0) {
+                for (int j = 0; (j < num_groups) && !component_in_group; j++) { //percorrer todos os grupos
+                    QList<QGraphicsItem*>* group = getGraphicalGroups()->at(j);
+                    int group_size = group->size();
+                    for (int g = 0; (g < group_size) && !component_in_group; g++) { //percorrer por todos componentes do grupo
+                        QGraphicsItem* groupComponent = group->at(g);
+                        if (groupComponent == c) {
+                            component_in_group = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (!component_in_group) {
+            QList<QGraphicsItem*>*new_group = new QList<QGraphicsItem*>();
+            for (int i = 0; i < size; i++) {
+                QGraphicsItem* c = selectedItems().at(i);
+                new_group->append(c);
+            }
+            getGraphicalGroups()->append(new_group);
+        }
+    }
+}
+
+void ModelGraphicsScene::ungroupComponents() {
+    int size = selectedItems().size();
+    bool component_in_group = false;
+    for (int i = 0; (i < size) && !component_in_group; i++) {  //percorrer todos os itens selecionados
+        QGraphicsItem* c = selectedItems().at(i);
+        int num_groups = getGraphicalGroups()->size();
+        if (num_groups > 0) {
+            for (int j = 0; (j < num_groups) && !component_in_group; j++) { //percorrer todos os grupos
+                QList<QGraphicsItem*>* group = getGraphicalGroups()->at(j);
+                int group_size = group->size();
+                for (int g = 0; (g < group_size) && !component_in_group; g++) { //percorrer por todos componentes do grupo
+                    QGraphicsItem* groupComponent = group->at(g);
+                    if (groupComponent == c) {
+                        getGraphicalGroups()->removeAt(j);
+                        component_in_group = true;
+                    }
+                }
+            }
+        }
+    }
+}
 
 //-------------------------
 // PROTECTED VIRTUAL FUNCTIONS
@@ -300,6 +352,10 @@ QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalConnections() const {
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalModelComponents() const {
 	return _graphicalModelComponents;
+}
+
+QList<QList<QGraphicsItem*>*>*ModelGraphicsScene::getGraphicalGroups() const {
+    return _graphicalGroups;
 }
 
 void ModelGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {

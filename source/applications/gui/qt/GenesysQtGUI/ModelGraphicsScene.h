@@ -85,6 +85,8 @@ public: // editing graphic model
 	void removeAnimation();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
+    void groupComponents();
+    void ungroupComponents();
 	void showGrid();
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
@@ -99,6 +101,7 @@ public:
 	QList<QGraphicsItem*>*getGraphicalDrawings() const;
 	QList<QGraphicsItem*>*getGraphicalAnimations() const;
 	QList<QGraphicsItem*>*getGraphicalEntities() const;
+    QList<QList<QGraphicsItem*>*>*getGraphicalGroups() const;
 
 protected: // virtual functions
 	virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent);
@@ -144,6 +147,7 @@ private:
 	QList<QGraphicsItem*>* _graphicalDrawings = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalAnimations = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalEntities = new QList<QGraphicsItem*>();
+    QList<QList<QGraphicsItem*>*>* _graphicalGroups = new QList<QList<QGraphicsItem*>*>();
 };
 
 #endif /* MODELGRAPHICSSCENE_H */

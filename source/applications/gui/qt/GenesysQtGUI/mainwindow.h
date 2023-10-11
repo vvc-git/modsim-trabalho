@@ -41,6 +41,8 @@ private slots:
 	void on_actionEditDelete_triggered();
 	void on_actionEditGroup_triggered();
 	void on_actionEditUngroup_triggered();
+    void on_actionViewGroup_triggered();
+    void on_actionViewUngroup_triggered();
 
 	void on_actionShowRule_triggered();
 	void on_actionShowGuides_triggered();
