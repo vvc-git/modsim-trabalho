@@ -1,26 +1,38 @@
 #include "DeleteUndoCommand.h"
 
-DeleteUndoCommand::DeleteUndoCommand(GraphicalModelComponent *gmc, QGraphicsScene *scene, QUndoCommand *parent)
-    : QUndoCommand(parent), myGraphicsScene(scene) {
-     std::cout << "oi" << std::endl;
-//    QList<QGraphicsItem *> list = myGraphicsScene->selectedItems();
-//    list.first()->setSelected(false);
-//    myDiagramItem = static_cast<DiagramItem *>(list.first());
-//    setText(QObject::tr("Delete %1")
-//                .arg(createCommandString(myDiagramItem, myDiagramItem->pos())));
+DeleteUndoCommand::DeleteUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, QUndoCommand *parent)
+    : QUndoCommand(parent), myGraphicalModelComponent(gmc), myGraphicsScene(scene) {
+    firstExecution = true;
+    initialPosition = QPointF(gmc->scenePos().x(), gmc->scenePos().y() + gmc->getHeight()/2);
+
+    std::string position = "position=(x=" + std::to_string(gmc->scenePos().x()) + ", y=" + std::to_string(gmc->scenePos().y()) + ")";
+
+    myGraphicsScene->update();
+    setText(QObject::tr("Delete %1")
+                .arg(QString::fromStdString("name=" + gmc->getComponent()->getName() + ", " + position)));
 }
 
-DeleteUndoCommand::~DeleteUndoCommand() {
-    delete this;
-}
+DeleteUndoCommand::~DeleteUndoCommand() {}
 
 void DeleteUndoCommand::undo() {
-     std::cout << "oi" << std::endl;
-//    myGraphicsScene->addItem(myDiagramItem);
-//    myGraphicsScene->update();
+    myGraphicsScene->addItem(myGraphicalModelComponent);
+    myGraphicsScene->getGraphicalModelComponents()->append(myGraphicalModelComponent);
+
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
+    dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+    myGraphicsScene->update();
 }
 
 void DeleteUndoCommand::redo() {
-      std::cout << "oi" << std::endl;
-//    myGraphicsScene->removeItem(myDiagramItem);
+    // remove in model
+    myGraphicsScene->removeModelComponentInModel(myGraphicalModelComponent);
+
+    //graphically
+    myGraphicsScene->removeItem(myGraphicalModelComponent);
+    myGraphicsScene->getGraphicalModelComponents()->removeOne(myGraphicalModelComponent);
+
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
+    dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }

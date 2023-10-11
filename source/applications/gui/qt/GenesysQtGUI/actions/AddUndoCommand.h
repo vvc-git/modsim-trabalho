@@ -1,10 +1,9 @@
 #ifndef ADDUNDOCOMMAND_H
 #define ADDUNDOCOMMAND_H
 
-#include <QString>
 #include <QUndoCommand>
-#include <ModelGraphicsScene.h>
-#include <ModelGraphicsView.h>
+#include "ModelGraphicsView.h"
+#include "ModelGraphicsScene.h"
 #include "graphicals/GraphicalModelComponent.h"
 
 
@@ -18,10 +17,9 @@ public:
 
 private:
     GraphicalModelComponent *myGraphicalModelComponent;
-    GraphicalModelComponent *copyMyGraphicalModelComponent;
     ModelGraphicsScene *myGraphicsScene;
     QPointF initialPosition;
-    bool first;
+    bool firstExecution;
 };
 
 #endif // ADDUNDOCOMMAND_H

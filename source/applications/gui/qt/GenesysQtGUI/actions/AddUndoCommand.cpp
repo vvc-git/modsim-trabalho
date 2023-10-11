@@ -1,15 +1,13 @@
 #include "AddUndoCommand.h"
-#include "ModelGraphicsScene.h"
 
 AddUndoCommand::AddUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, QUndoCommand *parent)
-    : QUndoCommand(parent), myGraphicsScene(scene) {
-    static int itemCount = 0;
-    first = true;
+    : QUndoCommand(parent), myGraphicalModelComponent(gmc), myGraphicsScene(scene) {
+    firstExecution = true;
     initialPosition = QPointF(gmc->scenePos().x(), gmc->scenePos().y() + gmc->getHeight()/2);
-    myGraphicalModelComponent = gmc;
+
     std::string position = "position=(x=" + std::to_string(gmc->scenePos().x()) + ", y=" + std::to_string(gmc->scenePos().y()) + ")";
+
     myGraphicsScene->update();
-    ++itemCount;
     setText(QObject::tr("Add %1")
                 .arg(QString::fromStdString("name=" + gmc->getComponent()->getName() + ", " + position)));
 }
@@ -17,23 +15,24 @@ AddUndoCommand::AddUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene 
 AddUndoCommand::~AddUndoCommand() {}
 
 void AddUndoCommand::undo() {
-    myGraphicsScene->removeGraphicalModelComponent(myGraphicalModelComponent);
-    myGraphicsScene->update();
+    // remove in model
+    myGraphicsScene->removeModelComponentInModel(myGraphicalModelComponent);
+
+    //graphically
+    myGraphicsScene->removeItem(myGraphicalModelComponent);
+    myGraphicsScene->getGraphicalModelComponents()->removeOne(myGraphicalModelComponent);
+
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
+    dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
 void AddUndoCommand::redo() {
-    if (!first) {
-        //myGraphicsScene->update();
-        ModelComponent *component = myGraphicalModelComponent->getComponent();
-        std::string pluginName = component->getClassname();
-        Plugin *plugin = myGraphicsScene->getSimulator()->getPlugins()->find(pluginName);
-        QColor color = myGraphicalModelComponent->getColor();
-        myGraphicsScene->clearSelection();
+    myGraphicsScene->addItem(myGraphicalModelComponent);
+    myGraphicsScene->getGraphicalModelComponents()->append(myGraphicalModelComponent);
 
-        myGraphicsScene->getSimulator()->getModels()->current()->insert(component);
-        myGraphicalModelComponent = myGraphicsScene->addGraphicalModelComponent(plugin, component, initialPosition, color, true);
-
-        myGraphicsScene->update();
-    }
-    first = false;
+    //notify graphical model change
+    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
+    dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+    myGraphicsScene->update();
 }

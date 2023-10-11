@@ -105,7 +105,7 @@ GraphicalModelComponent::GraphicalModelComponent(const GraphicalModelComponent& 
 }
 
 GraphicalModelComponent::~GraphicalModelComponent() {
-	//_component->~ModelComponent();
+    _component->~ModelComponent();
 }
 
 QRectF GraphicalModelComponent::boundingRect() const {

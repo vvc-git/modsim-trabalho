@@ -40,6 +40,7 @@
 #include "graphicals/GraphicalComponentPort.h"
 #include "graphicals/GraphicalConnection.h"
 #include "actions/AddUndoCommand.h"
+#include "actions/DeleteUndoCommand.h"
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
 	// grid
@@ -56,10 +57,11 @@ ModelGraphicsScene::~ModelGraphicsScene() {
 
 //-----------------------------------------------------------------------
 
-GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color, bool undoCreated) {
+GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color) {
+    // cria o componente gráfico
     GraphicalModelComponent* graphComp = new GraphicalModelComponent(plugin, component, position, color);
-    addItem(graphComp);
-    _graphicalModelComponents->append(graphComp);
+
+    // cria as conexoes
 	if (selectedItems().size() == 1 && plugin->getPluginInfo()->getMinimumInputs() > 0) { // check if there is selected component and crate a connection between them
 		GraphicalModelComponent* otherGraphComp = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(0));
 		if (otherGraphComp != nullptr) { // a component is selected
@@ -108,26 +110,26 @@ GraphicalModelComponent* ModelGraphicsScene::addGraphicalModelComponent(Plugin* 
 		}
 	}
 
-    if (undoCreated == false) {
-        // comentar depois
-        QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
-        _undoStack->push(addUndoCommand);
-    }
+    // adiciona o objeto criado na lista de componentes graficos para nao perder a referencia
+    _allGraphicalModelComponents.append(graphComp);
 
-    //notify graphical model change
-    GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, graphComp);
-    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
-    return graphComp;
+    // cria um objeto para undo e redo do add
+    // ele propriamente adiciona o objeto na tela
+    QUndoCommand *addUndoCommand = new AddUndoCommand(graphComp, this);
+    _undoStack->push(addUndoCommand);
 }
 
 GraphicalConnection* ModelGraphicsScene::addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort) {
-	GraphicalConnection* graphicconnection = new GraphicalConnection(sourcePort, destinationPort);
-	addItem(graphicconnection);
-	_graphicalConnections->append(graphicconnection);
-	//notify graphical model change
+    GraphicalConnection* graphicconnection = new GraphicalConnection(sourcePort, destinationPort);
+
+    addItem(graphicconnection);
+    _graphicalConnections->append(graphicconnection);
+
+    //notify graphical model change
 	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::CONNECTION, graphicconnection);
-	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
-	return graphicconnection;
+    dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+
+    return graphicconnection;
 }
 
 void ModelGraphicsScene::addDrawing() {
@@ -145,29 +147,33 @@ void ModelGraphicsScene::removeModelComponentInModel(GraphicalModelComponent* gm
 }
 
 void ModelGraphicsScene::removeGraphicalModelComponent(GraphicalModelComponent* gmc) {
-	// remove graphically
-	/// first remove connections
-	for (GraphicalComponentPort* port : gmc->getGraphicalInputPorts()) {
-		for (GraphicalConnection* graphConn : *port->getConnections()) {
-			removeGraphicalConnection(graphConn);
-		}
-	}
-	for (GraphicalComponentPort* port : gmc->getGraphicalOutputPorts()) {
-		for (GraphicalConnection* graphConn : *port->getConnections()) {
-			removeGraphicalConnection(graphConn);
-		}
-	}
-	/// then remove the component
-	// remove in model
-	removeModelComponentInModel(gmc);
-	//graphically
-	removeItem(gmc);
-	_graphicalModelComponents->removeOne(gmc);
-	ModelComponent* component = gmc->getComponent();
-	gmc->~GraphicalModelComponent();
-	//notify graphical model change
-	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, nullptr); // notify AFTER destroy or BEFORE it?
-	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+    // cria um objeto para undo e redo do delete
+    // ele propriamente remove o objeto na tela
+    QUndoCommand *deleteUndoCommand = new DeleteUndoCommand(gmc, this);
+    _undoStack->push(deleteUndoCommand);
+}
+
+void ModelGraphicsScene::clearGraphicalModelComponents() {
+    // limpa todos os componentes no final, desfazendo as conexoes
+    for (GraphicalModelComponent* gmc : _allGraphicalModelComponents) {
+        for (GraphicalComponentPort* port : gmc->getGraphicalInputPorts()) {
+            for (GraphicalConnection* graphConn : *port->getConnections()) {
+                removeGraphicalConnection(graphConn);
+            }
+        }
+
+        for (GraphicalComponentPort* port : gmc->getGraphicalOutputPorts()) {
+            for (GraphicalConnection* graphConn : *port->getConnections()) {
+                removeGraphicalConnection(graphConn);
+            }
+        }
+
+        // remove da lista de componentes graficos
+        _allGraphicalModelComponents.removeOne(gmc);
+
+        // libera o ponteiro alocado
+        delete gmc;
+    }
 }
 
 void ModelGraphicsScene::removeConnectionInModel(GraphicalConnection* gc) {
@@ -177,26 +183,24 @@ void ModelGraphicsScene::removeConnectionInModel(GraphicalConnection* gc) {
 
 void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
 	// remove in model
-	removeConnectionInModel(gc);
-	// remove graphically
+    removeConnectionInModel(gc);
+
+    // remove graphically
 	removeItem(gc);
-	_graphicalConnections->removeOne(gc);
-	// //////gc->~GraphicalConnection();
+    _graphicalConnections->removeOne(gc);
+
 	//notify graphical model change
 	GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::CONNECTION, nullptr); // notify AFTER destroy or BEFORE it?
 	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
-void ModelGraphicsScene::removeDrawing() {
+void ModelGraphicsScene::removeDrawing() {}
 
-}
-
-void ModelGraphicsScene::removeAnimation() {
-
-}
+void ModelGraphicsScene::removeAnimation() {}
 
 
 //------------------------------------------------------------------------
+
 
 void ModelGraphicsScene::showGrid() {
 	// remove existing grid

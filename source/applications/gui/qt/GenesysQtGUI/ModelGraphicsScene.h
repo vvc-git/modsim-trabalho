@@ -72,7 +72,7 @@ public:
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
 	virtual ~ModelGraphicsScene();
 public: // editing graphic model
-    GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue, bool undoCreated = false);
+    GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
 	GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
 	void addDrawing();
@@ -84,6 +84,7 @@ public: // editing graphic model
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
 	void removeDrawing();
 	void removeAnimation();
+    void clearGraphicalModelComponents();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
 	void showGrid();
@@ -135,6 +136,7 @@ private:
 	Simulator* _simulator = nullptr;
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
+    QList<GraphicalModelComponent*> _allGraphicalModelComponents;
     QUndoStack *_undoStack = nullptr;
 
 private:
