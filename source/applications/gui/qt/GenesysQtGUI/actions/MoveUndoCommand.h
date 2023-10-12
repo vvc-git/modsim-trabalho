@@ -10,7 +10,7 @@ class MoveUndoCommand : public QUndoCommand
 public:
     enum { Id = 1234 };
 
-    MoveUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, const QPointF &oldPos, const QPointF &newPos, QUndoCommand *parent = nullptr);
+    MoveUndoCommand(QList<GraphicalModelComponent*> gmc, ModelGraphicsScene *scene, QList<QPointF> &oldPos, QList<QPointF> &newPos, QUndoCommand *parent = nullptr);
     ~MoveUndoCommand();
 
     void undo() override;
@@ -20,10 +20,10 @@ public:
     int id() const override { return Id; }
 
 private:
-    GraphicalModelComponent *_myGraphicalModelComponent;
+    QList<GraphicalModelComponent*> _myGraphicalModelComponent;
     ModelGraphicsScene *_myGraphicsScene;
-    QPointF _myOldPos;
-    QPointF _myNewPos;
+    QList<QPointF> _myOldPos;
+    QList<QPointF> _myNewPos;
     bool _firstExecution;
 };
 

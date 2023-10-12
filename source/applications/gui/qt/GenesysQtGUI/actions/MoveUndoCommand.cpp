@@ -1,7 +1,7 @@
 #include "MoveUndoCommand.h"
 #include "ModelGraphicsScene.h"
 
-MoveUndoCommand::MoveUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, const QPointF &oldPos, const QPointF &newPos, QUndoCommand *parent)
+MoveUndoCommand::MoveUndoCommand(QList<GraphicalModelComponent*> gmc, ModelGraphicsScene *scene, QList<QPointF> &oldPos, QList<QPointF> &newPos, QUndoCommand *parent)
     : QUndoCommand(parent), _myGraphicalModelComponent(gmc), _myGraphicsScene(scene), _myOldPos(oldPos), _myNewPos(newPos) {
 
     _firstExecution = true;
@@ -11,43 +11,53 @@ MoveUndoCommand::~MoveUndoCommand() {}
 
 void MoveUndoCommand::undo() {
 
-        _myGraphicalModelComponent->setPos(_myOldPos);
+    for (int i = 0; i < _myGraphicalModelComponent.size(); i++) {
+        GraphicalModelComponent *item = _myGraphicalModelComponent[i];
+        QPointF oldPos = _myOldPos[i];
+
+        item->setPos(oldPos);
         _myGraphicsScene->update();
 
-        std::string position = "position=(x=" + std::to_string(_myOldPos.x()) + ", y=" + std::to_string(_myOldPos.y()) + ")";
+        std::string position = "position=(x=" + std::to_string(oldPos.x()) + ", y=" + std::to_string(oldPos.y()) + ")";
 
         setText(QObject::tr("Move %1")
-                    .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
-
-
+                    .arg(QString::fromStdString("name=" + item->getComponent()->getName() + ", " + position)));
+    }
 }
 
 void MoveUndoCommand::redo() {
     if (!_firstExecution) {
-        _myGraphicalModelComponent->setPos(_myNewPos);
-        _myGraphicsScene->update();
+        for (int i = 0; i < _myGraphicalModelComponent.size(); i++) {
+            GraphicalModelComponent *item = _myGraphicalModelComponent[i];
+            QPointF newPos = _myNewPos[i];
 
-        std::string position = "position=(x=" + std::to_string(_myNewPos.x()) + ", y=" + std::to_string(_myNewPos.y()) + ")";
+            item->setPos(newPos);
+            _myGraphicsScene->update();
 
-        setText(QObject::tr("Move %1")
-                    .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
+            std::string position = "position=(x=" + std::to_string(newPos.x()) + ", y=" + std::to_string(newPos.y()) + ")";
+
+            setText(QObject::tr("Move %1")
+                        .arg(QString::fromStdString("name=" + item->getComponent()->getName() + ", " + position)));
+        }
     }
     _firstExecution = false;
 }
 
 bool MoveUndoCommand::mergeWith(const QUndoCommand *command) {
-    const MoveUndoCommand *moveCommand = static_cast<const MoveUndoCommand *>(command);
-    GraphicalModelComponent *item = moveCommand->_myGraphicalModelComponent;
+//    for (int i = 0; i < _myGraphicalModelComponent.size(); i++) {
+//        const MoveUndoCommand *moveCommand = static_cast<const MoveUndoCommand *>(command);
+//        GraphicalModelComponent *itemCommand = moveCommand->_myGraphicalModelComponent[i];
 
-    if (_myGraphicalModelComponent != item)
-        return false;
+//        if (_myGraphicalModelComponent[i] != itemCommand)
+//            return false;
 
-    _myNewPos = item->scenePos();
+//        _myNewPos[i] = itemCommand->scenePos();
 
-    std::string position = "newPosition=(x=" + std::to_string(_myNewPos.x()) + ", y=" + std::to_string(_myNewPos.y()) + ")";
+//        std::string position = "newPosition=(x=" + std::to_string(_myNewPos[i].x()) + ", y=" + std::to_string(_myNewPos[i].y()) + ")";
 
-    setText(QObject::tr("Move %1")
-                .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
+//        setText(QObject::tr("Move %1")
+//                    .arg(QString::fromStdString("name=" + _myGraphicalModelComponent[i]->getComponent()->getName() + ", " + position)));
+//    }
 
     return true;
 }

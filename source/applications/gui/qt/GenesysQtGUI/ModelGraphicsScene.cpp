@@ -52,8 +52,7 @@ ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal heig
 ModelGraphicsScene::ModelGraphicsScene(const ModelGraphicsScene& orig) { // : QGraphicsScene(orig) {
 }
 
-ModelGraphicsScene::~ModelGraphicsScene() {
-}
+ModelGraphicsScene::~ModelGraphicsScene() {}
 
 
 //-----------------------------------------------------------------------
@@ -173,7 +172,7 @@ void ModelGraphicsScene::clearGraphicalModelComponents() {
         _allGraphicalModelComponents.removeOne(gmc);
 
         // libera o ponteiro alocado
-        delete gmc;
+        if (gmc) delete gmc;
     }
 }
 
@@ -293,16 +292,28 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
 
-    QList<GraphicalModelComponent*> selecteds;
+    QList<GraphicalModelComponent*> components;
+    QList<QPointF> oldPositions;
+    QList<QPointF> newPositions;
 
     foreach (QGraphicsItem* item, this->selectedItems()) {
         GraphicalModelComponent* component = dynamic_cast<GraphicalModelComponent*>(item);
         if (component && component->getOldPosition() != component->scenePos()) {
-            QUndoCommand *moveUndoCommand = new MoveUndoCommand(component, this, component->getOldPosition(), component->scenePos());
-            _undoStack->push(moveUndoCommand);
+            components.append(component);
+            oldPositions.append(component->getOldPosition());
+            newPositions.append(component->scenePos());
         }
-        component->setOldPosition(component->scenePos());
     }
+
+    if (components.size() >= 1) {
+        QUndoCommand *moveUndoCommand = new MoveUndoCommand(components, this, oldPositions, newPositions);
+        _undoStack->push(moveUndoCommand);
+    }
+
+    foreach (GraphicalModelComponent* item, components) {
+        item->setOldPosition(item->scenePos());
+    }
+
 }
 
 void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
