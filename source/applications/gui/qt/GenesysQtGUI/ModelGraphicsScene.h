@@ -94,6 +94,7 @@ public:
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    QList<QGraphicsItem*>*checkItemInGroup(GraphicalModelComponent* gmc);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -101,7 +102,7 @@ public:
 	QList<QGraphicsItem*>*getGraphicalDrawings() const;
 	QList<QGraphicsItem*>*getGraphicalAnimations() const;
 	QList<QGraphicsItem*>*getGraphicalEntities() const;
-    QList<QList<QGraphicsItem*>*>*getGraphicalGroups() const;
+    QList<QGraphicsItemGroup*>*getGraphicalGroups() const;
 
 protected: // virtual functions
 	virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent);
@@ -147,7 +148,7 @@ private:
 	QList<QGraphicsItem*>* _graphicalDrawings = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalAnimations = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalEntities = new QList<QGraphicsItem*>();
-    QList<QList<QGraphicsItem*>*>* _graphicalGroups = new QList<QList<QGraphicsItem*>*>();
+    QList<QGraphicsItemGroup*>* _graphicalGroups = new QList<QGraphicsItemGroup*>();
 };
 
 #endif /* MODELGRAPHICSSCENE_H */
