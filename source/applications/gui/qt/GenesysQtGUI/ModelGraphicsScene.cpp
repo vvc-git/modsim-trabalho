@@ -215,49 +215,58 @@ void ModelGraphicsScene::beginConnection() {
 
 void ModelGraphicsScene::groupComponents() {
     int size = selectedItems().size();
+    int num_groups = getGraphicalGroups()->size();
+    //verifica se algum item selecionado já faz parte de um grupo
     bool component_in_group = false;
-    if (size > 1) {
+    if (size > 1 && num_groups > 0) {
         for (int i = 0; (i < size) && !component_in_group; i++) {  //percorrer todos os itens selecionados
             QGraphicsItem* c = selectedItems().at(i);
-            int num_groups = getGraphicalGroups()->size();
-            if (num_groups > 0) {
-                for (int j = 0; (j < num_groups) && !component_in_group; j++) { //percorrer todos os grupos
-                    QList<QGraphicsItemGroup*>* group = getGraphicalGroups();
-                    int group_size = group->size();
-                    for (int g = 0; (g < group_size) && !component_in_group; g++) { //percorrer por todos componentes do grupo
-                        QGraphicsItem* groupComponent = group->at(g);
-                        if (groupComponent == c) {
-                            component_in_group = true;
-                        }
-                    }
-                }
+            int group_children = c->childItems().size();
+            if (group_children > 1) {
+                component_in_group = true;
             }
         }
-        if (!component_in_group) {
-            QGraphicsItemGroup *new_group = createItemGroup(selectedItems());
-            getGraphicalGroups()->append(new_group);
-            addItem(new_group);
-            addRect(new_group->boundingRect());
+    }
+    if (!component_in_group) {
+
+        QList<QGraphicsItem*> group = selectedItems();
+
+        QGraphicsItemGroup* new_group = new QGraphicsItemGroup();
+
+        for (int i = 0; i < group.size(); i++) {
+            QGraphicsItem* c = group.at(i);
+            new_group->addToGroup(c);
         }
+
+        // Adicione o novo grupo à sua cena
+        addItem(new_group);
+        new_group->setFlag(QGraphicsItem::ItemIsSelectable, true);
+        new_group->setFlag(QGraphicsItem::ItemIsMovable, true);
+        // Adicione o grupo à sua lista de grupos (se necessário)
+        getGraphicalGroups()->append(new_group);
     }
 }
 
 void ModelGraphicsScene::ungroupComponents() {
-    /*int size = selectedItems().size();
-    //if (size == 1) {
-    for (int i = 0; (i < size); i++) {  //percorrer todos os itens selecionados
-        int num_groups = getGraphicalGroups()->size();
-        if (num_groups > 0) {
-            for (int j = 0; (j < num_groups); j++) { //percorrer todos os grupos
-            QGraphicsItemGroup* group = getGraphicalGroups()->at(j);
-                if (group == g) {
-                    getGraphicalGroups()->removeAt(j);
-                    destroyItemGroup(group);
-                }
+    int size = selectedItems().size();
+    if (size == 1) {
+        QGraphicsItem* item = selectedItems().at(0);
+        QGraphicsItemGroup* group = dynamic_cast<QGraphicsItemGroup*>(item);
+
+        if (group) {
+            // Recupere os itens individuais no grupo
+            QList<QGraphicsItem*> itemsInGroup = group->childItems();
+
+            // Adicione novamente os itens individuais à cena
+            foreach (QGraphicsItem* itemInGroup, itemsInGroup) {
+                addItem(itemInGroup);
             }
+            // Remova o grupo da cena
+            removeItem(group);
+            delete group;
+
         }
     }
-    //} */
 }
 
 
