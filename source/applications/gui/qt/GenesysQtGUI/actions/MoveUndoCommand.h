@@ -24,6 +24,7 @@ private:
     ModelGraphicsScene *_myGraphicsScene;
     QPointF _myOldPos;
     QPointF _myNewPos;
+    bool _firstExecution;
 };
 
 #endif // MOVEUNDOCOMMAND_H

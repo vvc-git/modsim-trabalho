@@ -247,17 +247,11 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 	QGraphicsScene::mousePressEvent(mouseEvent);
     if (mouseEvent->button() == Qt::LeftButton) {
 
-        QList<GraphicalModelComponent*> selecteds;
-
-        foreach (QGraphicsItem* item, this->selectedItems()) {
-            GraphicalModelComponent* component = dynamic_cast<GraphicalModelComponent*>(item);
-            if (component) {
-                QUndoCommand *moveUndoCommand = new MoveUndoCommand(component, this, component->scenePos(), mouseEvent->scenePos());
-                _undoStack->push(moveUndoCommand);
-            }
-        }
-
         QGraphicsItem* item = this->itemAt(mouseEvent->scenePos(), QTransform());
+
+        if (GraphicalModelComponent *component = dynamic_cast<GraphicalModelComponent *> (item)) {
+            component->setOldPosition(component->scenePos());
+        }
 
         if (_connectingStep > 0) {
             if (item != nullptr) {
@@ -297,7 +291,18 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 }
 
 void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-	QGraphicsScene::mouseReleaseEvent(mouseEvent);
+    QGraphicsScene::mouseReleaseEvent(mouseEvent);
+
+    QList<GraphicalModelComponent*> selecteds;
+
+    foreach (QGraphicsItem* item, this->selectedItems()) {
+        GraphicalModelComponent* component = dynamic_cast<GraphicalModelComponent*>(item);
+        if (component && component->getOldPosition() != component->scenePos()) {
+            QUndoCommand *moveUndoCommand = new MoveUndoCommand(component, this, component->getOldPosition(), component->scenePos());
+            _undoStack->push(moveUndoCommand);
+        }
+        component->setOldPosition(component->scenePos());
+    }
 }
 
 void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {

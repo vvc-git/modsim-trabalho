@@ -29,6 +29,8 @@ public:
 	ModelComponent* getComponent() const;
     QColor getColor() const;
     qreal getHeight() const;
+    QPointF getOldPosition() const;
+    void setOldPosition(QPointF oldPosition);
 	QList<GraphicalComponentPort *> getGraphicalInputPorts() const;
 	QList<GraphicalComponentPort *> getGraphicalOutputPorts() const;
 private:
@@ -54,6 +56,7 @@ protected:
 	unsigned int _selWidth = TraitsGUI<GModelComponent>::selectionWidth;//8;
 	ModelComponent* _component;
 	QColor _color;
+    QPointF _oldPosition;
 	qreal _stretchPosTop = TraitsGUI<GModelComponent>::stretchPos;//0.5;
 	qreal _stretchPosBottom = TraitsGUI<GModelComponent>::stretchPos;//0.5;
 	qreal _stretchPosLeft = TraitsGUI<GModelComponent>::stretchPos;//0.5;

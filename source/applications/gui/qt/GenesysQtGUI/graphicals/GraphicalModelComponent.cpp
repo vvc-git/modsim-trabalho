@@ -286,6 +286,16 @@ ModelComponent* GraphicalModelComponent::getComponent() const {
 	return _component;
 }
 
+QPointF GraphicalModelComponent::getOldPosition() const {
+    return _oldPosition;
+}
+
+
+void GraphicalModelComponent::setOldPosition(QPointF oldPosition) {
+    _oldPosition = oldPosition;
+}
+
+
 QColor GraphicalModelComponent::getColor() const {
     return _color;
 }
