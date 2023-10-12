@@ -1,42 +1,47 @@
 #include "MoveUndoCommand.h"
+#include "ModelGraphicsScene.h"
 
-MoveUndoCommand::MoveUndoCommand(GraphicalModelComponent *gmc, QGraphicsScene *scene, const QPointF &oldPos, QUndoCommand *parent)
-    : QUndoCommand(parent), myGraphicalModelComponent(gmc), myOldPos(oldPos) {
-    //newPos(diagramItem->pos())
+MoveUndoCommand::MoveUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, const QPointF &oldPos, const QPointF &newPos, QUndoCommand *parent)
+    : QUndoCommand(parent), _myGraphicalModelComponent(gmc), _myGraphicsScene(scene), _myOldPos(oldPos), _myNewPos(newPos) {
 
-    std::cout << "oi" << std::endl;
+    return;
 }
 
-MoveUndoCommand::~MoveUndoCommand() {
-    delete this;
-}
+MoveUndoCommand::~MoveUndoCommand() {}
 
 void MoveUndoCommand::undo() {
-    std::cout << "oi" << std::endl;
-//    myDiagramItem->setPos(myOldPos);
-//    myDiagramItem->scene()->update();
-//    setText(QObject::tr("Move %1")
-//                .arg(createCommandString(myDiagramItem, newPos)));
+    _myGraphicalModelComponent->setPos(_myOldPos);
+    _myGraphicsScene->update();
+
+    std::string position = "newPosition=(x=" + std::to_string(_myNewPos.x()) + ", y=" + std::to_string(_myNewPos.y()) + ")";
+
+    setText(QObject::tr("Move %1")
+                .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
 }
 
 void MoveUndoCommand::redo() {
-    std::cout << "oi" << std::endl;
-//    myDiagramItem->setPos(newPos);
-//    setText(QObject::tr("Move %1")
-//                .arg(createCommandString(myDiagramItem, newPos)));
+    _myGraphicalModelComponent->setPos(_myNewPos);
+    _myGraphicsScene->update();
+
+    std::string position = "newPosition=(x=" + std::to_string(_myNewPos.x()) + ", y=" + std::to_string(_myNewPos.y()) + ")";
+
+    setText(QObject::tr("Move %1")
+                .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
 }
 
 bool MoveUndoCommand::mergeWith(const QUndoCommand *command) {
-    std::cout << "oi" << std::endl;
-//    const MoveUndoCommand *MoveUndoCommand = static_cast<const MoveUndoCommand *>(command);
-//    DiagramItem *item = MoveUndoCommand->myDiagramItem;
+    const MoveUndoCommand *moveCommand = static_cast<const MoveUndoCommand *>(command);
+    GraphicalModelComponent *item = moveCommand->_myGraphicalModelComponent;
 
-//    if (myDiagramItem != item)
-//        return false;
+    if (_myGraphicalModelComponent != item)
+        return false;
 
-//    newPos = item->pos();
-//    setText(QObject::tr("Move %1")
-//                .arg(createCommandString(myDiagramItem, newPos)));
+    _myNewPos = item->scenePos();
 
-//    return true;
+    std::string position = "newPosition=(x=" + std::to_string(_myNewPos.x()) + ", y=" + std::to_string(_myNewPos.y()) + ")";
+
+    setText(QObject::tr("Move %1")
+                .arg(QString::fromStdString("name=" + _myGraphicalModelComponent->getComponent()->getName() + ", " + position)));
+
+    return true;
 }

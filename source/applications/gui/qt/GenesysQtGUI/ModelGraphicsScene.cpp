@@ -41,6 +41,7 @@
 #include "graphicals/GraphicalConnection.h"
 #include "actions/AddUndoCommand.h"
 #include "actions/DeleteUndoCommand.h"
+#include "actions/MoveUndoCommand.h"
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
 	// grid
@@ -238,14 +239,6 @@ void ModelGraphicsScene::beginConnection() {
 	((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
 }
 
-
-void ModelGraphicsScene::addItemToScene(GraphicalModelComponent* item) {
-    QGraphicsItem* item2 = static_cast<QGraphicsItem *>(item);
-    std::string nome = item->getComponent()->getName();
-
-    QGraphicsScene::addItem(item2);
-}
-
 //-------------------------
 // PROTECTED VIRTUAL FUNCTIONS
 //-------------------------
@@ -253,7 +246,19 @@ void ModelGraphicsScene::addItemToScene(GraphicalModelComponent* item) {
 void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 	QGraphicsScene::mousePressEvent(mouseEvent);
     if (mouseEvent->button() == Qt::LeftButton) {
+
+        QList<GraphicalModelComponent*> selecteds;
+
+        foreach (QGraphicsItem* item, this->selectedItems()) {
+            GraphicalModelComponent* component = dynamic_cast<GraphicalModelComponent*>(item);
+            if (component) {
+                QUndoCommand *moveUndoCommand = new MoveUndoCommand(component, this, component->scenePos(), mouseEvent->scenePos());
+                _undoStack->push(moveUndoCommand);
+            }
+        }
+
         QGraphicsItem* item = this->itemAt(mouseEvent->scenePos(), QTransform());
+
         if (_connectingStep > 0) {
             if (item != nullptr) {
                 GraphicalComponentPort* port = dynamic_cast<GraphicalComponentPort*> (item);

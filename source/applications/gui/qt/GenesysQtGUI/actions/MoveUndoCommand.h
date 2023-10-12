@@ -2,6 +2,7 @@
 #define MOVEUNDOCOMMAND_H
 
 #include <QUndoCommand>
+#include "ModelGraphicsScene.h"
 #include "graphicals/GraphicalModelComponent.h"
 
 class MoveUndoCommand : public QUndoCommand
@@ -9,7 +10,7 @@ class MoveUndoCommand : public QUndoCommand
 public:
     enum { Id = 1234 };
 
-    MoveUndoCommand(GraphicalModelComponent *gmc, QGraphicsScene *scene, const QPointF &oldPos, QUndoCommand *parent = nullptr);
+    MoveUndoCommand(GraphicalModelComponent *gmc, ModelGraphicsScene *scene, const QPointF &oldPos, const QPointF &newPos, QUndoCommand *parent = nullptr);
     ~MoveUndoCommand();
 
     void undo() override;
@@ -19,9 +20,10 @@ public:
     int id() const override { return Id; }
 
 private:
-    GraphicalModelComponent *myGraphicalModelComponent;
-    QPointF myOldPos;
-    QPointF newPos;
+    GraphicalModelComponent *_myGraphicalModelComponent;
+    ModelGraphicsScene *_myGraphicsScene;
+    QPointF _myOldPos;
+    QPointF _myNewPos;
 };
 
 #endif // MOVEUNDOCOMMAND_H
