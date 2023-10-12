@@ -1744,11 +1744,13 @@ void MainWindow::on_actionEditPaste_triggered() {
 	_showMessageNotImplemented();
 }
 
+void MainWindow::on_actionShowGrid_triggered() {
+    ui->graphicsView->getScene()->showGrid();
+}
 
 void MainWindow::on_actionShowRule_triggered() {
 	_showMessageNotImplemented();
 }
-
 
 void MainWindow::on_actionShowGuides_triggered() {
 	_showMessageNotImplemented();
@@ -2089,6 +2091,12 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
+
+    // quando a cena é fechada, limpo o grid associado a ela
+    ui->graphicsView->getScene()->grid()->clear();
+    // volto o botao de grid para "não clicado"
+    ui->actionShowGrid->setChecked(false);
+
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());
 	_actualizeActions();
