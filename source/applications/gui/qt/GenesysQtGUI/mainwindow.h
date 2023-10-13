@@ -139,6 +139,8 @@ private slots:
 
 
 
+    void on_actionShowSnap_triggered();
+
 private: // VIEW
 
 private: // trace handlers

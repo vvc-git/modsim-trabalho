@@ -252,9 +252,18 @@ void ModelGraphicsScene::showGrid()
     _grid.visible = !_grid.visible;
 }
 
+void ModelGraphicsScene::setSnapToGrid(bool activated)
+{
+    _snapToGrid = activated;
+}
+
+bool ModelGraphicsScene::getSnapToGrid() {
+    return _snapToGrid;
+}
+
 void ModelGraphicsScene::snapItemsToGrid()
 {
-    if (!_grid.visible) {
+    if (_snapToGrid) {
         // Obtenha a lista de visualizações associadas a esta cena
 
         QList<QGraphicsItem*>* items = getGraphicalModelComponents();

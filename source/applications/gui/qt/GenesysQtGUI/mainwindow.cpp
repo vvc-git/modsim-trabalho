@@ -2153,3 +2153,14 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 
 
 
+
+void MainWindow::on_actionShowSnap_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    if (scene->getSnapToGrid()) {
+        scene->setSnapToGrid(false);
+    } else {
+        scene->setSnapToGrid(true);
+    }
+}
+

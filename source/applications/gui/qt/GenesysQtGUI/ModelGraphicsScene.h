@@ -69,7 +69,7 @@ class ModelGraphicsScene : public QGraphicsScene {
 public:
 	ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent = nullptr);
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
-	virtual ~ModelGraphicsScene();
+    virtual ~ModelGraphicsScene();
 public: // editing graphic model
 	GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
 	GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
@@ -101,6 +101,8 @@ public:
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void setSnapToGrid(bool activated);
+    bool getSnapToGrid();
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -138,6 +140,7 @@ private:
 private:
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
 	bool _controlIsPressed = false;
+    bool _snapToGrid = false;
 	GraphicalComponentPort* _sourceGraphicalComponentPort;
 private:
 	// IMPORTANT. MUST BE CONSISTENT WITH SIMULATOR->MODEL
