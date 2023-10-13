@@ -145,6 +145,7 @@ void ModelGraphicsScene::addDrawing(QPointF endPoint, bool moving) {
         }
 
     } else if (_drawingMode == TEXT) {
+        /*
         QGraphicsTextItem* textItem = new QGraphicsTextItem("Seu Texto Aqui");
         textItem->setFont(QFont("Arial", 12)); // Configurar a fonte (opcional)
         textItem->setPos(endPoint.x(), endPoint.y()); // Definir a posição na cena
@@ -152,9 +153,9 @@ void ModelGraphicsScene::addDrawing(QPointF endPoint, bool moving) {
         textItem->setTextWidth(30*_grid.interval); // Definir largura máxima para quebrar o texto
         textItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
         textItem->setFlag(QGraphicsItem::ItemIsMovable, true);
-        textItem->setVisible(true);
+        textItem->setVisible(true); */
 
-        connect(this, &QGraphicsScene::selectionChanged, this, &ModelGraphicsScene::startTextEditing);
+        //connect(this, &QGraphicsScene::selectionChanged, this, &ModelGraphicsScene::startTextEditing);
 
     } else if (_drawingMode == RECTANGLE) {
         if (abs(_drawingStartPoint.x() - endPoint.x()) > _grid.interval && abs(_drawingStartPoint.y() - endPoint.y()) > _grid.interval) {
@@ -296,10 +297,10 @@ void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
 }
 
 void ModelGraphicsScene::removeDrawing(QGraphicsItem * item) {
-    for (int i = 0 ; getGraphicalDrawings()->size(); i++) {
+    for (int i = 0 ; i < getGraphicalDrawings()->size(); i++) {
         if (getGraphicalDrawings()->at(i) == item) {
             getGraphicalDrawings()->removeAt(i);
-            removeItem(item);
+            //removeItem(item);
             delete(item);
         }
     }
