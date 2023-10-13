@@ -1872,7 +1872,7 @@ void MainWindow::on_actionAnimateSimulatedTime_triggered()
 void MainWindow::on_actionDrawText_triggered()
 {
     ModelGraphicsScene* scene = ui->graphicsView->getScene();
-    // Ative a ferramenta de desenho de ellipse
+    // Ative a ferramenta de desenho do texto
     scene->setDrawingMode(ModelGraphicsScene::DrawingMode::TEXT);
 }
 

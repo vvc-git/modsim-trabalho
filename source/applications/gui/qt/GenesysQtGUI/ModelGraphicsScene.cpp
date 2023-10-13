@@ -145,7 +145,17 @@ void ModelGraphicsScene::addDrawing(QPointF endPoint, bool moving) {
         }
 
     } else if (_drawingMode == TEXT) {
-        //
+        QGraphicsTextItem* textItem = new QGraphicsTextItem("Seu Texto Aqui");
+        textItem->setFont(QFont("Arial", 12)); // Configurar a fonte (opcional)
+        textItem->setPos(endPoint.x(), endPoint.y()); // Definir a posição na cena
+        textItem->setDefaultTextColor(Qt::black); // Configurar a cor do texto
+        textItem->setTextWidth(30*_grid.interval); // Definir largura máxima para quebrar o texto
+        textItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+        textItem->setFlag(QGraphicsItem::ItemIsMovable, true);
+        textItem->setVisible(true);
+
+        connect(this, &QGraphicsScene::selectionChanged, this, &ModelGraphicsScene::startTextEditing);
+
     } else if (_drawingMode == RECTANGLE) {
         if (abs(_drawingStartPoint.x() - endPoint.x()) > _grid.interval && abs(_drawingStartPoint.y() - endPoint.y()) > _grid.interval) {
             // Remova o retângulo anterior, se houver
@@ -224,6 +234,18 @@ void ModelGraphicsScene::addAnimation() {
 
 }
 
+void ModelGraphicsScene::startTextEditing() {
+    QGraphicsItem* selectedItem = focusItem();
+    if (selectedItem) {
+        QGraphicsTextItem* textItem = dynamic_cast<QGraphicsTextItem*>(selectedItem);
+        if (textItem) {
+            textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
+            textItem->setFocus(); // Dê foco ao item para iniciar a edição de texto
+        }
+    }
+}
+
+
 void ModelGraphicsScene::removeModelComponentInModel(GraphicalModelComponent* gmc) {
 	ModelComponent* component = gmc->getComponent();
 	Model* model = _simulator->getModels()->current();
@@ -273,8 +295,14 @@ void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
 	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
-void ModelGraphicsScene::removeDrawing() {
-
+void ModelGraphicsScene::removeDrawing(QGraphicsItem * item) {
+    for (int i = 0 ; getGraphicalDrawings()->size(); i++) {
+        if (getGraphicalDrawings()->at(i) == item) {
+            getGraphicalDrawings()->removeAt(i);
+            removeItem(item);
+            delete(item);
+        }
+    }
 }
 
 void ModelGraphicsScene::removeAnimation() {
@@ -358,6 +386,8 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
                 addDrawing(_drawingStartPoint, false);
             } else if (_drawingMode == POLYGON_POINTS) {
                 // Continue a adicionar pontos ao polígono
+                addDrawing(mouseEvent->scenePos(), false);
+            } else if (_drawingMode == TEXT) {
                 addDrawing(mouseEvent->scenePos(), false);
             }
         }
@@ -537,15 +567,20 @@ void ModelGraphicsScene::keyPressEvent(QKeyEvent *keyEvent) {
 			} else {
 				GraphicalConnection* gc = dynamic_cast<GraphicalConnection*> (item);
 				if (gc != nullptr) {
-					removeGraphicalConnection(gc);
-				} else {
-					//Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
-					//if (gc != nullptr) {
-					//	removeItem(item);
-					//	gc->~Drawing();
-					//}
-				}
-			}
+                    removeGraphicalConnection(gc);
+                } else {
+                    bool aux = getGraphicalDrawings()->contains(item);
+                    if (aux) {
+                        removeDrawing(item);
+                    }
+                    //Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
+                    //if (gc != nullptr) {
+                    //	removeItem(item);
+                    //	gc->~Drawing();
+                    //}
+                }
+            }
+
 		}
 	}
 	_controlIsPressed = (keyEvent->key() == Qt::Key_Control);

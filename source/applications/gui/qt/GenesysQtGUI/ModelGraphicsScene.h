@@ -80,12 +80,13 @@ public: // editing graphic model
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
     void addDrawing(QPointF endPoint, bool moving);
 	void addAnimation();
+    void startTextEditing();
 	void removeGraphicalModelComponent(GraphicalModelComponent* gmc);
 	void removeModelComponentInModel(GraphicalModelComponent* gmc);
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
-    void removeDrawing();
+    void removeDrawing(QGraphicsItem * item);
 	void removeAnimation();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
