@@ -2,9 +2,7 @@
 #include "ModelGraphicsScene.h"
 
 MoveUndoCommand::MoveUndoCommand(QList<GraphicalModelComponent*> gmc, ModelGraphicsScene *scene, QList<QPointF> &oldPos, QList<QPointF> &newPos, QUndoCommand *parent)
-    : QUndoCommand(parent), _myGraphicalModelComponent(gmc), _myGraphicsScene(scene), _myOldPos(oldPos), _myNewPos(newPos) {
-
-    _firstExecution = true;
+    : QUndoCommand(parent), _myGraphicalModelComponent(gmc), _myGraphicsScene(scene), _myOldPos(oldPos), _myNewPos(newPos), _firstExecution(true) {
 }
 
 MoveUndoCommand::~MoveUndoCommand() {}
@@ -16,12 +14,8 @@ void MoveUndoCommand::undo() {
         QPointF oldPos = _myOldPos[i];
 
         item->setPos(oldPos);
+        item->setOldPosition(oldPos);
         _myGraphicsScene->update();
-
-        std::string position = "position=(x=" + std::to_string(oldPos.x()) + ", y=" + std::to_string(oldPos.y()) + ")";
-
-        setText(QObject::tr("Move %1")
-                    .arg(QString::fromStdString("name=" + item->getComponent()->getName() + ", " + position)));
     }
 }
 
@@ -33,31 +27,48 @@ void MoveUndoCommand::redo() {
 
             item->setPos(newPos);
             _myGraphicsScene->update();
-
-            std::string position = "position=(x=" + std::to_string(newPos.x()) + ", y=" + std::to_string(newPos.y()) + ")";
-
-            setText(QObject::tr("Move %1")
-                        .arg(QString::fromStdString("name=" + item->getComponent()->getName() + ", " + position)));
         }
     }
+    //_myGraphicsScene->clearSelection();
     _firstExecution = false;
 }
 
-bool MoveUndoCommand::mergeWith(const QUndoCommand *command) {
+//bool MoveUndoCommand::mergeWith(const QUndoCommand *command) {
+//    const MoveUndoCommand *moveCommand = static_cast<const MoveUndoCommand *>(command);
+//    QList<GraphicalModelComponent *> itensCommand = moveCommand->_myGraphicalModelComponent;
+
+//    struct indexesPosition {
+//        int oldGmc;
+//        int newGmc;
+//    };
+
+//    QList<indexesPosition> peersIndex;
+
+//    if (itensCommand.size() != _myGraphicalModelComponent.size())
+//        return false;
+
 //    for (int i = 0; i < _myGraphicalModelComponent.size(); i++) {
-//        const MoveUndoCommand *moveCommand = static_cast<const MoveUndoCommand *>(command);
-//        GraphicalModelComponent *itemCommand = moveCommand->_myGraphicalModelComponent[i];
+//        bool dif = false;
+//        indexesPosition peer;
 
-//        if (_myGraphicalModelComponent[i] != itemCommand)
+//        for (int j = 0; j < itensCommand.size(); j++) {
+//            GraphicalModelComponent *itemCommand = itensCommand[j];
+//            if (_myGraphicalModelComponent[i] == itemCommand) {
+//                dif = true;
+//                peer.oldGmc = i;
+//                peer.newGmc = j;
+//                peersIndex.append(peer);
+//                break;
+//            }
+//        }
+
+//        if (!dif)
 //            return false;
-
-//        _myNewPos[i] = itemCommand->scenePos();
-
-//        std::string position = "newPosition=(x=" + std::to_string(_myNewPos[i].x()) + ", y=" + std::to_string(_myNewPos[i].y()) + ")";
-
-//        setText(QObject::tr("Move %1")
-//                    .arg(QString::fromStdString("name=" + _myGraphicalModelComponent[i]->getComponent()->getName() + ", " + position)));
 //    }
 
-    return true;
-}
+//    for (int k = 0; k < peersIndex.size(); k++) {
+//        _myNewPos[peersIndex[k].newGmc] = itensCommand[peersIndex[k].oldGmc]->scenePos();
+//    }
+
+//    return true;
+//}
