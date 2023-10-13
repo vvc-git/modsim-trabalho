@@ -36,6 +36,8 @@ void DeleteUndoCommand::redo() {
     myGraphicsScene->removeItem(myGraphicalModelComponent);
     myGraphicsScene->getGraphicalModelComponents()->removeOne(myGraphicalModelComponent);
 
+    myGraphicsScene->clearConnections(myGraphicalModelComponent);
+
     //notify graphical model change
     GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
     dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);

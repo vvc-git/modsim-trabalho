@@ -176,6 +176,43 @@ void ModelGraphicsScene::clearGraphicalModelComponents() {
     }
 }
 
+void ModelGraphicsScene::clearConnections(GraphicalModelComponent* gmc) {
+    QList<GraphicalComponentPort *> output1;
+    QList<GraphicalComponentPort *> output2;
+    ConnectionManager* connection1;
+    ConnectionManager* connection2;
+
+    for (GraphicalComponentPort* port : gmc->getGraphicalInputPorts()) {
+        for (GraphicalConnection* graphConn : *port->getConnections()) {
+            GraphicalModelComponent *source = this->findGraphicalModelComponent(graphConn->getSource()->component->getId());
+
+            for (GraphicalComponentPort* portOut : source->getGraphicalOutputPorts()) {
+                portOut->removeGraphicalConnection(graphConn);
+            }
+
+            source->setAcceptDrops(true);
+
+            removeGraphicalConnection(graphConn);
+        }
+    }
+
+    for (GraphicalComponentPort* port : gmc->getGraphicalOutputPorts()) {
+        for (GraphicalConnection* graphConn : *port->getConnections()) {
+            removeGraphicalConnection(graphConn);
+        }
+    }
+
+    output1.clear();
+    output2.clear();
+    connection1->setMaxInputConnections(1);
+    connection2->setMaxInputConnections(1);
+    // remove da lista de componentes graficos
+    _allGraphicalModelComponents.removeOne(gmc);
+
+    // libera o ponteiro alocado
+    if (gmc) delete gmc;
+}
+
 void ModelGraphicsScene::removeConnectionInModel(GraphicalConnection* gc) {
 	ModelComponent* sourceComp = gc->getSource()->component;
 	sourceComp->getConnections()->removeAtPort(gc->getSource()->channel.portNumber);
@@ -500,8 +537,8 @@ void ModelGraphicsScene::setParentWidget(QWidget *parentWidget) {
 	_parentWidget = parentWidget;
 }
 
-/*
-QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelMomponentItems(){
+
+QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelComponentItems(){
 	QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();
 	for(QGraphicsItem* item: this->items()) {
 		GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*>(item);
@@ -511,7 +548,17 @@ QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelMomponentItem
 	}
 	return list;
 }
- */
+
+GraphicalModelComponent* ModelGraphicsScene::findGraphicalModelComponent(Util::identification id){
+    QList<GraphicalModelComponent*> *allComponents = ModelGraphicsScene::graphicalModelComponentItems();
+
+    for(GraphicalModelComponent* item: *allComponents) {
+        if (item->getComponent()->getId() == id) {
+            return item;
+        }
+    }
+    return nullptr;
+}
 
 //------------------------
 // Private

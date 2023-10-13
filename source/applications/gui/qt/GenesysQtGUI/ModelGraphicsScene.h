@@ -78,6 +78,7 @@ public: // editing graphic model
 	void addDrawing();
 	void addAnimation();
 	void removeGraphicalModelComponent(GraphicalModelComponent* gmc);
+    void clearConnections(GraphicalModelComponent* gmc);
 	void removeModelComponentInModel(GraphicalModelComponent* gmc);
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
@@ -85,7 +86,8 @@ public: // editing graphic model
 	void removeDrawing();
 	void removeAnimation();
     void clearGraphicalModelComponents();
-	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
+    QList<GraphicalModelComponent*>* graphicalModelComponentItems();
+    GraphicalModelComponent* findGraphicalModelComponent(Util::identification id);
 public:
 	void showGrid();
     QUndoStack* getUndoStack();
