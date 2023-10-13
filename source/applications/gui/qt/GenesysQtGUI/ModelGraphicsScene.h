@@ -85,11 +85,6 @@ public: // editing graphic model
 	void removeAnimation();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
-<<<<<<< HEAD
-    void groupComponents();
-    void ungroupComponents();
-	void showGrid();
-=======
     struct GRID {
         unsigned int interval;
         QPen pen;
@@ -99,14 +94,14 @@ public:
     };
     GRID *grid();
     void showGrid();
->>>>>>> 42dfb9a5a2603deff9b7c582b17c396a8ae1c8a3
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
 	void setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged);
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
-    QList<QGraphicsItem*>*checkItemInGroup(GraphicalModelComponent* gmc);
+    void groupComponents();
+    void ungroupComponents();
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;

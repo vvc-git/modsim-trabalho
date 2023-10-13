@@ -301,9 +301,16 @@ void ModelGraphicsScene::ungroupComponents() {
             // Recupere os itens individuais no grupo
             QList<QGraphicsItem*> itemsInGroup = group->childItems();
 
+
             // Adicione novamente os itens individuais à cena
-            foreach (QGraphicsItem* itemInGroup, itemsInGroup) {
-                addItem(itemInGroup);
+            for (int i = 0; i < itemsInGroup.size(); i++) {
+                QGraphicsItem * item = itemsInGroup.at(i);
+                //remova item por item do grupo
+                group->removeFromGroup(item);
+                //adicionar novamente a cena
+                addItem(item);
+                item->setFlag(QGraphicsItem::ItemIsSelectable, true);
+                item->setFlag(QGraphicsItem::ItemIsMovable, true);
             }
             // Remova o grupo da cena
             removeItem(group);
