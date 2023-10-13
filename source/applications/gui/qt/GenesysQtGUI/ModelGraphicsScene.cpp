@@ -252,6 +252,48 @@ void ModelGraphicsScene::showGrid()
     _grid.visible = !_grid.visible;
 }
 
+void ModelGraphicsScene::snapItemsToGrid()
+{
+    if (!_grid.visible) {
+        // Obtenha a lista de visualizações associadas a esta cena
+
+        QList<QGraphicsItem*>* items = getGraphicalModelComponents();
+        int num_items = items->size();
+
+        for (int i = 0; i < num_items; i++) {
+            QGraphicsItem* item = items->at(i);
+
+            GraphicalModelComponent* modelItem = dynamic_cast<GraphicalModelComponent*>(item);
+            if (modelItem) {
+                // Obtenha a posição atual do item
+                QPointF itemPos = modelItem->pos();
+
+                // Calcule a nova posição ajustada ao grid
+                qreal x = qRound(itemPos.x() / _grid.interval) * _grid.interval;
+                qreal y = qRound(itemPos.y() / _grid.interval) * _grid.interval;
+
+
+                // Verifique se a nova posição está dentro dos limites da cena
+                if (x < sceneRect().left()) {
+                    x = sceneRect().left();
+                }
+                else if (x > sceneRect().right()) {
+                    x = sceneRect().right();
+                }
+                if (y < sceneRect().top()) {
+                    y = sceneRect().top();
+                }
+                else if (y > sceneRect().bottom()) {
+                    y = sceneRect().bottom();
+                }
+
+                //Defina a nova posição ajustada ao grid
+                modelItem->setPos(x, y);
+            }
+        }
+    }
+}
+
 void ModelGraphicsScene::beginConnection() {
 	_connectingStep = 1;
 	((QGraphicsView*)this->parent())->setCursor(Qt::CrossCursor);
@@ -305,6 +347,8 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 
 void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 	QGraphicsScene::mouseReleaseEvent(mouseEvent);
+
+    snapItemsToGrid();
 }
 
 void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {

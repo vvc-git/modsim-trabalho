@@ -94,6 +94,7 @@ public:
     };
     GRID *grid();
     void showGrid();
+    void snapItemsToGrid();
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
 	void setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged);
