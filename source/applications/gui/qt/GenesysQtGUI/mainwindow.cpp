@@ -1562,7 +1562,6 @@ void MainWindow::on_treeWidget_Plugins_itemDoubleClicked(QTreeWidgetItem *item, 
     }
     // If it's a child, perform the double-click action if it makes sense
     else if (item->parent() != nullptr) {
-    else if (item->parent() != nullptr) {
 
         // If it's a data Definition
         if (ui->treeWidget_Plugins->indexOfTopLevelItem(item->parent()) == 0) {
@@ -2180,3 +2179,48 @@ void MainWindow::on_actionSimulationConfigure_triggered()
     DialogSimulationConfigure* dialog = new DialogSimulationConfigure(this);
     dialog->show();
 }
+
+void MainWindow::on_treeWidgetDataDefnitions_itemDoubleClicked(QTreeWidgetItem *item, int column)
+{
+
+    // Check if the column index is 2 (Name column)
+    if (column == 2) {
+
+        // Set the Qt::ItemIsEditable flag to enable editing for the specific item
+        // It's required to set the flag here because otherwise all the other fields could changed too.
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+
+        // Initiate the editing of the specified item in the specified column in the QTreeWidget
+        ui->treeWidgetDataDefnitions->editItem(item, column);
+
+         // Reset the Qt::ItemIsEditable flag to disable further editing after the edit operation
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+
+    }
+
+}
+
+void MainWindow::on_treeWidgetDataDefnitions_itemChanged(QTreeWidgetItem *item, int column)
+{
+
+    // Check if the column index is 2 (Name column)
+    if (column == 2) {
+
+        // Get the changes
+        QString after = item->text(column);
+        Model * m = simulator->getModels()->current();
+
+        // Save in the model
+        for (std::string dataTypename : *m->getDataManager()->getDataDefinitionClassnames()) {
+            for (ModelDataDefinition* comp : *m->getDataManager()->getDataDefinitionList(dataTypename)->list()) {
+
+                QString id = QString::fromStdString(Util::StrIndex(comp->getId()));
+
+                if (id.contains(item->text(0)))
+                    comp->setName(after.toStdString());
+            }
+        }
+    }
+
+}
+
