@@ -53,6 +53,7 @@ public:
 	enum class EventObjectType : int {
 		COMPONENT = 1, DATADEFINITION = 2, CONNECTION = 3, DRAWING = 4, ANIMATION = 5, OTHER = 6
 	};
+
 public:
 
 	GraphicalModelEvent(GraphicalModelEvent::EventType eventType, GraphicalModelEvent::EventObjectType eventObjectType, QGraphicsItem* item) {
@@ -71,17 +72,20 @@ public:
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
 	virtual ~ModelGraphicsScene();
 public: // editing graphic model
+    enum DrawingMode{
+        NONE, LINE, TEXT, RECTANGLE, ELLIPSE, POLYGON,  POLYGON_POINTS, POLYGON_FINISHED
+    };
 	GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
 	GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
-	void addDrawing();
+    void addDrawing(QPointF endPoint, bool moving);
 	void addAnimation();
 	void removeGraphicalModelComponent(GraphicalModelComponent* gmc);
 	void removeModelComponentInModel(GraphicalModelComponent* gmc);
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
-	void removeDrawing();
+    void removeDrawing();
 	void removeAnimation();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
@@ -92,6 +96,7 @@ public:
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void setDrawingMode(DrawingMode drawingMode);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -132,6 +137,13 @@ private:
 	QWidget* _parentWidget;
 
 private:
+    DrawingMode _drawingMode;
+    QGraphicsRectItem* _currentRectangle;
+    QGraphicsLineItem* _currentLine;
+    QGraphicsPolygonItem* _currentPolygon;
+    QGraphicsEllipseItem* _currentEllipse;
+    QPolygonF _currentPolygonPoints;
+    QPointF _drawingStartPoint;
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
 	bool _controlIsPressed = false;
 	GraphicalComponentPort* _sourceGraphicalComponentPort;
