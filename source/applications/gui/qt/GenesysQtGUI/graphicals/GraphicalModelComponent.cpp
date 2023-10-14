@@ -304,6 +304,30 @@ qreal GraphicalModelComponent::getHeight() const {
     return _height;
 }
 
+<<<<<<< HEAD
+QPointF GraphicalModelComponent::getOldPosition() const {
+    return _oldPosition;
+}
+
+
+void GraphicalModelComponent::setOldPosition(QPointF oldPosition) {
+    _oldPosition = oldPosition;
+}
+
+
+=======
+>>>>>>> caso-3.0
+QColor GraphicalModelComponent::getColor() const {
+    return _color;
+}
+
+<<<<<<< HEAD
+qreal GraphicalModelComponent::getHeight() const {
+    return _height;
+}
+
+=======
+>>>>>>> caso-3.0
 bool GraphicalModelComponent::sceneEvent(QEvent *event) {
 	QGraphicsObject::sceneEvent(event); // Unnecessary
 }

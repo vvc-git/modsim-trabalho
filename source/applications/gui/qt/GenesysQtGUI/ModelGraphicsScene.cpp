@@ -45,8 +45,8 @@
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
 	// grid
-	_grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
-	_grid.pen.setStyle(Qt::DotLine);
+    _grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
+    _grid.pen.setStyle(Qt::DotLine);
 }
 
 ModelGraphicsScene::ModelGraphicsScene(const ModelGraphicsScene& orig) { // : QGraphicsScene(orig) {
@@ -320,21 +320,25 @@ void ModelGraphicsScene::removeAnimation() {}
 
 
 void ModelGraphicsScene::showGrid() {
-	// remove existing grid
-	if (items().size() > 0) {
-	//	for (QGraphicsLineItem* line : *_grid.lines) {
-	//		removeItem((QGraphicsItem*) line);
-	//	}
-	}
-	_grid.lines->clear();
+    if (items().size() > 0) {
+        for (QGraphicsLineItem* line : *_grid.lines) {
+            this->removeItem((QGraphicsItem *)line);
+        }
+        this->_grid.clear();
+        return;
+    }
+
+    // clean the grid
+    this->_grid.clear();
+
 	// add new grid
 	for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
 		QGraphicsLineItem* line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
+        _grid.lines->insert(_grid.lines->end(), line);
 	}
 	for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
 		QGraphicsLineItem* line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
+        _grid.lines->insert(_grid.lines->end(), line);
 	}
 }
 
@@ -446,10 +450,20 @@ void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEv
 }
 
 void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent) {
-	QGraphicsScene::wheelEvent(wheelEvent);
-	if (_controlIsPressed) {
-		//@TODO: ZOOM!!
-	}
+    QGraphicsScene::wheelEvent(wheelEvent);
+    if (_controlIsPressed)
+    {
+        QGraphicsView *view = views().isEmpty() ? nullptr : views().first();
+        double zoomFactor = 1.1;
+        if (wheelEvent->delta() > 0) {
+            // Zoom in
+            view->scale(zoomFactor, zoomFactor);
+        } else {
+            // Zoom out
+            view->scale(1.0 / zoomFactor, 1.0 / zoomFactor);
+        }
+        wheelEvent->accept();
+    }
 }
 
 QList<QGraphicsItem*>*ModelGraphicsScene::getGraphicalEntities() const {
@@ -507,7 +521,7 @@ void ModelGraphicsScene::focusOutEvent(QFocusEvent *focusEvent) {
 void ModelGraphicsScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
 	QGraphicsScene::dropEvent(event);
 	if (this->_objectBeingDragged != nullptr) {
-		QTreeWidgetItem* treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
+        QTreeWidgetItem* treeItem = /*dynamic_cast<QTreeWidgetItem*>*/(_objectBeingDragged);
 		if (treeItem != nullptr) {			
 			QColor color = treeItem->foreground(0).color(); // treeItem->textColor(0);
 			QString pluginname = treeItem->whatsThis(0);
