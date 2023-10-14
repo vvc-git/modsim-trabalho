@@ -461,6 +461,28 @@ void ModelGraphicsScene::setParentWidget(QWidget *parentWidget) {
 	_parentWidget = parentWidget;
 }
 
+QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelComponentItems(){
+    QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();
+    for(QGraphicsItem* item: this->items()) {
+        GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*>(item);
+        if (gmc != nullptr) {
+            list->append(gmc);
+        }
+    }
+    return list;
+}
+
+GraphicalModelComponent* ModelGraphicsScene::findGraphicalModelComponent(Util::identification id){
+    QList<GraphicalModelComponent*> *allComponents = ModelGraphicsScene::graphicalModelComponentItems();
+
+    for(GraphicalModelComponent* item: *allComponents) {
+        if (item->getComponent()->getId() == id) {
+            return item;
+        }
+    }
+    return nullptr;
+}
+
 /*
 QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelMomponentItems(){
 	QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();

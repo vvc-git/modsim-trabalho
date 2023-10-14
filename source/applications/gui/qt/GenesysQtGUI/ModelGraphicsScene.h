@@ -83,7 +83,8 @@ public: // editing graphic model
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
 	void removeDrawing();
 	void removeAnimation();
-	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
+    QList<GraphicalModelComponent*>* graphicalModelComponentItems();
+    GraphicalModelComponent* findGraphicalModelComponent(Util::identification id);
 public:
 	void showGrid();
 	void beginConnection();

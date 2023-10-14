@@ -13,6 +13,7 @@
 // GUI
 #include "ModelGraphicsScene.h"
 #include "TraitsGUI.h"
+#include "graphicals/GraphicalConnection.h"
 // PropEditor
 #include "QPropertyBrowser/qttreepropertybrowser.h"
 // QT
@@ -216,6 +217,24 @@ bool MainWindow::_saveGraphicalModel(QString filename)
                     out << line << Qt::endl;
                 }
             }
+
+            out << "\n#CONNECTIONS" << Qt::endl;
+
+            for (QGraphicsItem *connectionn : * ui->graphicsView->getScene()->getGraphicalConnections()) {
+                GraphicalConnection* connection = dynamic_cast<GraphicalConnection*> (connectionn);
+                if (connection) {
+                    Util::identification idSource = connection->getSource()->component->getId();
+                    std::string nameSource = connection->getSource()->component->getName();
+                    unsigned int portSource = connection->getSource()->channel.portNumber;
+
+                    Util::identification idDestination = connection->getDestination()->component->getId();
+                    std::string nameDestination = connection->getDestination()->component->getName();
+                    unsigned int portDestination = connection->getDestination()->channel.portNumber;
+
+                    line = QString::fromStdString("(" + std::to_string(idSource) + "," + std::to_string(portSource) + "," + std::to_string(idDestination) + "," + std::to_string(portDestination) + ")");
+                    out << line << Qt::endl;
+                }
+            }
         }
         saveFile.close();
         return true;
@@ -248,8 +267,10 @@ Model *MainWindow::_loadGraphicalModel(std::string filename) {
 
     QStringList simulLang;
     QStringList gui;
+    QStringList connections;
 
     bool guiFlag = false;
+    bool connectionsFlag = false;
 
     for (const QString &line : lines) {
         if (line.startsWith("#Genegys Graphic Model")) {
@@ -257,8 +278,17 @@ Model *MainWindow::_loadGraphicalModel(std::string filename) {
             continue;
         }
 
-        if (!guiFlag) simulLang.append(line);
-        else gui.append(line);
+        if (line != "") {
+            if (!guiFlag) {
+                simulLang.append(line);
+            } else if (line.startsWith("#CONNECTIONS")) {
+                connectionsFlag = true;
+            } else if (connectionsFlag) {
+                connections.append(line);
+            } else {
+                gui.append(line);
+            }
+        }
     }
 
     file.close();
@@ -355,9 +385,29 @@ Model *MainWindow::_loadGraphicalModel(std::string filename) {
             ModelComponent* component = simulator->getModels()->current()->getComponents()->find(id);
             // Desenha na tela
             scene->addGraphicalModelComponent(plugin, component, position, color);
-
-
         }
+
+        for (const QString& line : connections) {
+            QStringRef subString(&line, 1, line.size() - 2);
+
+            std::istringstream ss(subString.toString().toStdString());
+            char delimiter;
+            unsigned int sourceId, portSource, destinationId, portDestination;
+
+            ss >> sourceId >> delimiter >> portSource >> delimiter >> destinationId >> delimiter >> portDestination;
+
+            GraphicalModelComponent* source = ui->graphicsView->getScene()->findGraphicalModelComponent(sourceId);
+            GraphicalModelComponent* destination = ui->graphicsView->getScene()->findGraphicalModelComponent(destinationId);
+
+            source->getComponent()->getConnections()->insertAtPort(portSource, new Connection({destination->getComponent(), portDestination}));
+            //graphically
+            GraphicalComponentPort* sourceport = source->getGraphicalOutputPorts().at(portSource);
+            GraphicalComponentPort* destport = destination->getGraphicalInputPorts().at(portDestination);
+            ui->graphicsView->getScene()->addGraphicalConnection(sourceport, destport);
+        }
+
+        QList<GraphicalModelComponent*> *models = ui->graphicsView->getScene()->graphicalModelComponentItems();
+        models->clear();
 
 		ui->textEdit_Console->append("\n");
 		_modelfilename = QString::fromStdString(filename);
