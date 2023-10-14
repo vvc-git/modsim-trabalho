@@ -316,7 +316,6 @@ void MainWindow::_actualizeActions() {
 	//edit
 	ui->toolBarEdit->setEnabled(opened);
 	ui->menuEdit->setEnabled(opened);
-
 	// view
 	ui->menuView->setEnabled(opened);
 	ui->toolBarView->setEnabled(opened);
@@ -341,7 +340,7 @@ void MainWindow::_actualizeActions() {
 	ui->actionEditCopy->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditCut->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditDelete->setEnabled(numSelectedGraphicals>0);
-    ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
+	ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
 	ui->actionEditRedo->setEnabled(actualCommandundoRedo<maxCommandundoRedo);
 
 	// sliders
@@ -350,8 +349,6 @@ void MainWindow::_actualizeActions() {
 		_clearModelEditors();
 	}
 	_modelWasOpened = opened;
-
-
 }
 
 void MainWindow::_actualizeTabPanes() {
@@ -1747,11 +1744,13 @@ void MainWindow::on_actionEditPaste_triggered() {
 	_showMessageNotImplemented();
 }
 
+void MainWindow::on_actionShowGrid_triggered() {
+    ui->graphicsView->getScene()->showGrid();
+}
 
 void MainWindow::on_actionShowRule_triggered() {
 	_showMessageNotImplemented();
 }
-
 
 void MainWindow::on_actionShowGuides_triggered() {
 	_showMessageNotImplemented();
@@ -2092,6 +2091,12 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
+
+    // quando a cena é fechada, limpo o grid associado a ela
+    ui->graphicsView->getScene()->grid()->clear();
+    // volto o botao de grid para "não clicado"
+    ui->actionShowGrid->setChecked(false);
+
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());
 	_actualizeActions();
@@ -2146,6 +2151,18 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 	dialog->show();
 }
 
+void MainWindow::on_actionViewGroup_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->groupComponents();
+}
+
+
+void MainWindow::on_actionViewUngroup_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    scene->ungroupComponents();
+}
 
 void MainWindow::on_actionArranjeLeft_triggered()
 {

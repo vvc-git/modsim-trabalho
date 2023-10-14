@@ -41,7 +41,10 @@ private slots:
 	void on_actionEditDelete_triggered();
 	void on_actionEditGroup_triggered();
 	void on_actionEditUngroup_triggered();
+    void on_actionViewGroup_triggered();
+    void on_actionViewUngroup_triggered();
 
+    void on_actionShowGrid_triggered();
 	void on_actionShowRule_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
@@ -85,13 +88,6 @@ private slots:
 	void on_actionAlignRight_triggered();
 	void on_actionAlignCenter_triggered();
 	void on_actionAlignLeft_triggered();
-
-    void on_actionArranjeLeft_triggered();
-    void on_actionArranjeTop_triggered();
-    void on_actionArranjeRight_triggered();
-    void on_actionArranjeCenter_triggered();
-    void on_actionArranjeMiddle_triggered();
-    void on_actionArranjeBototm_triggered();
 
 	void on_actionToolsParserGrammarChecker_triggered();
 	void on_actionToolsExperimentation_triggered();
@@ -143,7 +139,12 @@ private slots:
 	void on_graphicsView_rubberBandChanged(const QRect &viewportRect, const QPointF &fromScenePoint, const QPointF &toScenePoint);
 	void on_TextCodeEditor_textChanged();
 
-
+    void on_actionArranjeLeft_triggered();
+    void on_actionArranjeRight_triggered();
+    void on_actionArranjeTop_triggered();
+    void on_actionArranjeBototm_triggered();
+    void on_actionArranjeCenter_triggered();
+    void on_actionArranjeMiddle_triggered();
 
 
 private: // VIEW

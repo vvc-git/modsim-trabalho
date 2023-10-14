@@ -85,13 +85,23 @@ public: // editing graphic model
 	void removeAnimation();
 	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
 public:
-	void showGrid();
+    struct GRID {
+        unsigned int interval;
+        QPen pen;
+        std::list<QGraphicsLineItem *> *lines;
+        bool visible;
+        void clear();
+    };
+    GRID *grid();
+    void showGrid();
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
 	void setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged);
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void groupComponents();
+    void ungroupComponents();
     void arranjeModels(int direction);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
@@ -100,6 +110,7 @@ public:
 	QList<QGraphicsItem*>*getGraphicalDrawings() const;
 	QList<QGraphicsItem*>*getGraphicalAnimations() const;
 	QList<QGraphicsItem*>*getGraphicalEntities() const;
+    QList<QGraphicsItemGroup*>*getGraphicalGroups() const;
 
 protected: // virtual functions
 	virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent);
@@ -122,12 +133,7 @@ protected: // virtual functions
 	virtual void wheelEvent(QGraphicsSceneWheelEvent *wheelEvent);
 
 private:
-
-	struct GRID {
-		unsigned int interval = TraitsGUI<GScene>::gridInterval;//20;
-		QPen pen = QPen(TraitsGUI<GScene>::gridColor);//QPen(Qt::gray); //TODO: To use TraitsGUI<GScene>::gridColor must solve myrgba first
-		std::list<QGraphicsLineItem*>* lines = new std::list<QGraphicsLineItem*>();
-	} _grid;
+    GRID _grid;
 	Simulator* _simulator = nullptr;
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
@@ -145,6 +151,7 @@ private:
 	QList<QGraphicsItem*>* _graphicalDrawings = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalAnimations = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalEntities = new QList<QGraphicsItem*>();
+    QList<QGraphicsItemGroup*>* _graphicalGroups = new QList<QGraphicsItemGroup*>();
 };
 
 #endif /* MODELGRAPHICSSCENE_H */
