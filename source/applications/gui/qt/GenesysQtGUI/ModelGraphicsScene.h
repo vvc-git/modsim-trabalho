@@ -54,6 +54,7 @@ public:
 	enum class EventObjectType : int {
 		COMPONENT = 1, DATADEFINITION = 2, CONNECTION = 3, DRAWING = 4, ANIMATION = 5, OTHER = 6
 	};
+
 public:
 
 	GraphicalModelEvent(GraphicalModelEvent::EventType eventType, GraphicalModelEvent::EventObjectType eventObjectType, QGraphicsItem* item) {
@@ -72,11 +73,15 @@ public:
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
     virtual ~ModelGraphicsScene();
 public: // editing graphic model
-    GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
+    enum DrawingMode{
+        NONE, LINE, TEXT, RECTANGLE, ELLIPSE, POLYGON,  POLYGON_POINTS, POLYGON_FINISHED
+    };
+	GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
     GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort, unsigned int portSourceConnection, unsigned int portDestinationConnection);
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
-	void addDrawing();
+    void addDrawing(QPointF endPoint, bool moving);
 	void addAnimation();
+    void startTextEditing();
     void removeComponent(GraphicalModelComponent* gmc);
     void handleClearConnectionsOnDeleteComponent(GraphicalModelComponent* gmc);
     void reconnectConnectionsOnRedoComponent(GraphicalModelComponent* gmc);
@@ -84,7 +89,7 @@ public: // editing graphic model
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
-	void removeDrawing();
+    void removeDrawing(QGraphicsItem * item);
 	void removeAnimation();
     void clearGraphicalModelComponents();
     void clearGraphicalModelConnections();
@@ -115,6 +120,7 @@ public:
     void groupComponents();
     void ungroupComponents();
     void arranjeModels(int direction);
+    void setDrawingMode(DrawingMode drawingMode);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -154,6 +160,13 @@ private:
     QUndoStack *_undoStack = nullptr;
 
 private:
+    DrawingMode _drawingMode;
+    QGraphicsRectItem* _currentRectangle;
+    QGraphicsLineItem* _currentLine;
+    QGraphicsPolygonItem* _currentPolygon;
+    QGraphicsEllipseItem* _currentEllipse;
+    QPolygonF _currentPolygonPoints;
+    QPointF _drawingStartPoint;
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
 	bool _controlIsPressed = false;
     bool _snapToGrid = false;

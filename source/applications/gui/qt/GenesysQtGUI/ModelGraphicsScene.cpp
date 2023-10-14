@@ -158,13 +158,131 @@ void ModelGraphicsScene::clearGraphicalModelConnections() {
     }
 }
 
-void ModelGraphicsScene::addDrawing() {
+void ModelGraphicsScene::addDrawing(QPointF endPoint, bool moving) {
+    if (_drawingMode == LINE) {
+        //verifica se a linha é muito pequena antes de desenhar
+        if (abs(_drawingStartPoint.x() - endPoint.x()) > _grid.interval || abs(_drawingStartPoint.y() - endPoint.y()) > _grid.interval) {
 
+            if (_currentLine != nullptr) {
+                removeItem(_currentLine);
+                delete _currentLine;
+            }
+
+            // Crie e adicione um nova linha à cena
+            if (moving) {
+                _currentLine = new QGraphicsLineItem(_drawingStartPoint.x(), _drawingStartPoint.y(), endPoint.x(), endPoint.y());
+                addItem(_currentLine);
+            } else {
+                QGraphicsLineItem* line = new QGraphicsLineItem(_drawingStartPoint.x(), _drawingStartPoint.y(), endPoint.x(), endPoint.y());
+                line->setFlag(QGraphicsItem::ItemIsSelectable, true);
+                line->setFlag(QGraphicsItem::ItemIsMovable, true);
+                getGraphicalDrawings()->append(line);
+                addItem(line);
+            }
+        }
+
+    } else if (_drawingMode == TEXT) {
+        /*
+        QGraphicsTextItem* textItem = new QGraphicsTextItem("Seu Texto Aqui");
+        textItem->setFont(QFont("Arial", 12)); // Configurar a fonte (opcional)
+        textItem->setPos(endPoint.x(), endPoint.y()); // Definir a posição na cena
+        textItem->setDefaultTextColor(Qt::black); // Configurar a cor do texto
+        textItem->setTextWidth(30*_grid.interval); // Definir largura máxima para quebrar o texto
+        textItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+        textItem->setFlag(QGraphicsItem::ItemIsMovable, true);
+        textItem->setVisible(true); */
+
+        //connect(this, &QGraphicsScene::selectionChanged, this, &ModelGraphicsScene::startTextEditing);
+
+    } else if (_drawingMode == RECTANGLE) {
+        if (abs(_drawingStartPoint.x() - endPoint.x()) > _grid.interval && abs(_drawingStartPoint.y() - endPoint.y()) > _grid.interval) {
+            // Remova o retângulo anterior, se houver
+            qreal width = endPoint.x() - _drawingStartPoint.x();
+            qreal height = endPoint.y() - _drawingStartPoint.y();
+            if (_currentRectangle != nullptr) {
+                removeItem(_currentRectangle);
+                delete _currentRectangle;
+            }
+
+            // Crie e adicione um novo retângulo à cena
+            if (moving) {
+                _currentRectangle = new QGraphicsRectItem(_drawingStartPoint.x(), _drawingStartPoint.y(), width, height);
+                addItem(_currentRectangle);
+            } else {
+                QGraphicsRectItem* rectangle = new QGraphicsRectItem(_drawingStartPoint.x(), _drawingStartPoint.y(), width, height);
+                rectangle->setFlag(QGraphicsItem::ItemIsSelectable, true);
+                rectangle->setFlag(QGraphicsItem::ItemIsMovable, true);
+                getGraphicalDrawings()->append(rectangle);
+                addItem(rectangle);
+            }
+        }
+    } else if (_drawingMode == ELLIPSE) {
+        if (abs(_drawingStartPoint.x() - endPoint.x()) > _grid.interval && abs(_drawingStartPoint.y() - endPoint.y()) > _grid.interval) {
+            // Remova a ellipse anterior, se houver
+            qreal width = endPoint.x() - _drawingStartPoint.x();
+            qreal height = endPoint.y() - _drawingStartPoint.y();
+            if (_currentEllipse != nullptr) {
+                removeItem(_currentEllipse);
+                delete _currentEllipse;
+            }
+
+            // Crie e adicione uma nova ellipse à cena
+            if (moving) {
+                _currentEllipse = new QGraphicsEllipseItem(_drawingStartPoint.x(), _drawingStartPoint.y(), width, height);
+                addItem(_currentEllipse);
+            } else {
+                QGraphicsEllipseItem* ellipse = new QGraphicsEllipseItem(_drawingStartPoint.x(), _drawingStartPoint.y(), width, height);
+                ellipse->setFlag(QGraphicsItem::ItemIsSelectable, true);
+                ellipse->setFlag(QGraphicsItem::ItemIsMovable, true);
+                getGraphicalDrawings()->append(ellipse);
+                addItem(ellipse);
+            }
+        }
+    } else if (_drawingMode == POLYGON) {
+        // Adiciona o primeiro ponto do poligono
+        _drawingMode = POLYGON_POINTS;
+        _currentPolygonPoints.clear();
+        _currentPolygonPoints << endPoint;
+        _currentPolygon = new QGraphicsPolygonItem(QPolygonF(_currentPolygonPoints));
+        _currentPolygon->setVisible(true);
+
+        addItem(_currentPolygon);
+    } else if (_drawingMode == POLYGON_POINTS) {
+        removeItem(_currentPolygon);
+        _currentPolygonPoints << endPoint;
+        _currentPolygon = new QGraphicsPolygonItem(QPolygonF(_currentPolygonPoints));
+        _currentPolygon->setVisible(true);
+        addItem(_currentPolygon);
+    } else if (_drawingMode == POLYGON_FINISHED) {
+        _currentPolygon->setFlag(QGraphicsItem::ItemIsSelectable, true);
+        _currentPolygon->setFlag(QGraphicsItem::ItemIsMovable, true);
+        getGraphicalDrawings()->append(_currentPolygon);
+    }
+    // Redefina o estado de desenho
+    if (!moving && !(_drawingMode == POLYGON) && !(_drawingMode == POLYGON_POINTS)) {
+        _drawingMode = NONE;
+        _currentRectangle = nullptr;
+        _currentLine = nullptr;
+        _currentEllipse = nullptr;
+        _currentPolygon = nullptr;
+    }
 }
 
 void ModelGraphicsScene::addAnimation() {
 
 }
+
+void ModelGraphicsScene::startTextEditing() {
+    QGraphicsItem* selectedItem = focusItem();
+    if (selectedItem) {
+        QGraphicsTextItem* textItem = dynamic_cast<QGraphicsTextItem*>(selectedItem);
+        if (textItem) {
+            textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
+            textItem->setFocus(); // Dê foco ao item para iniciar a edição de texto
+        }
+    }
+}
+
 
 void ModelGraphicsScene::removeModelComponentInModel(GraphicalModelComponent* gmc) {
 	ModelComponent* component = gmc->getComponent();
@@ -313,7 +431,15 @@ void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
 	dynamic_cast<ModelGraphicsView*> (views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
 }
 
-void ModelGraphicsScene::removeDrawing() {}
+void ModelGraphicsScene::removeDrawing(QGraphicsItem * item) {
+    for (int i = 0 ; i < getGraphicalDrawings()->size(); i++) {
+        if (getGraphicalDrawings()->at(i) == item) {
+            getGraphicalDrawings()->removeAt(i);
+            //removeItem(item);
+            delete(item);
+        }
+    }
+}
 
 void ModelGraphicsScene::removeAnimation() {}
 
@@ -509,6 +635,7 @@ void ModelGraphicsScene::ungroupComponents() {
 
         }
     }
+    selectedItems().clear();
 }
 
 
@@ -649,9 +776,21 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
             }
             ((ModelGraphicsView *) (this->parent()))->unsetCursor();
             _connectingStep = 0;
-        } else {
-            if (item==nullptr) {
-                //ui->treeViewPropertyEditor->setActiveObject(nullptr, nullptr);
+        } else if (_drawingMode != NONE) {
+            // Capturar o ponto de início do desenho
+            _drawingStartPoint = mouseEvent->scenePos();
+            _currentRectangle = nullptr;
+            _currentLine = nullptr;
+            _currentEllipse = nullptr;
+
+            if (_drawingMode == POLYGON) {
+                // Cria o poligono
+                addDrawing(_drawingStartPoint, false);
+            } else if (_drawingMode == POLYGON_POINTS) {
+                // Continue a adicionar pontos ao polígono
+                addDrawing(mouseEvent->scenePos(), false);
+            } else if (_drawingMode == TEXT) {
+                addDrawing(mouseEvent->scenePos(), false);
             }
         }
     }
@@ -684,6 +823,14 @@ void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
         item->setOldPosition(item->scenePos());
     }
 
+
+    if (mouseEvent->button() == Qt::LeftButton && _drawingMode != NONE) {
+        // Capturar o ponto final da linha
+        QPointF drawingEndPoint = mouseEvent->scenePos();
+        //Adicionar desenho a tela
+        addDrawing(drawingEndPoint, false);
+        ((ModelGraphicsView *) (this->parent()))->unsetCursor();
+    }
 }
 
 void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
@@ -695,7 +842,10 @@ void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEv
 			_connectingStep = 2;
 
 		}
-	}
+    }
+    if (_drawingMode == POLYGON || _drawingMode == POLYGON_POINTS) {
+        _drawingMode = POLYGON_FINISHED;
+    }
 }
 
 void ModelGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent) {
@@ -754,9 +904,27 @@ void ModelGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 		if (_connectingStep > 1) {
 			((ModelGraphicsView *) (this->parent()))->setCursor(Qt::ClosedHandCursor);
 		} else {
-			((ModelGraphicsView *) (this->parent()))->setCursor(Qt::CrossCursor);
-		}
-	}
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::CrossCursor);
+        }
+    } else if (_drawingMode != NONE && _drawingMode != POLYGON && _drawingMode != POLYGON_POINTS){
+        //mostrar desenho se formando
+        QPointF currentPoint = mouseEvent->scenePos();
+        addDrawing(currentPoint, true);
+        ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
+        /*if (_drawingMode == LINE) {
+            QPointF currentPoint = mouseEvent->scenePos();
+            addDrawing(currentPoint, true);
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
+        } else if (_drawingMode == RECTANGLE) {
+            QPointF currentPoint = mouseEvent->scenePos();
+            addDrawing(currentPoint, true);
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
+        } else if (_drawingMode == ELLIPSE) {
+            QPointF currentPoint = mouseEvent->scenePos();
+            addDrawing(currentPoint, true);
+            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::ClosedHandCursor);
+        }*/
+    }
 }
 
 void ModelGraphicsScene::focusInEvent(QFocusEvent *focusEvent) {
@@ -834,15 +1002,20 @@ void ModelGraphicsScene::keyPressEvent(QKeyEvent *keyEvent) {
 			} else {
 				GraphicalConnection* gc = dynamic_cast<GraphicalConnection*> (item);
 				if (gc != nullptr) {
-					removeGraphicalConnection(gc);
-				} else {
-					//Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
-					//if (gc != nullptr) {
-					//	removeItem(item);
-					//	gc->~Drawing();
-					//}
-				}
-			}
+                    removeGraphicalConnection(gc);
+                } else {
+                    bool aux = getGraphicalDrawings()->contains(item);
+                    if (aux) {
+                        removeDrawing(item);
+                    }
+                    //Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
+                    //if (gc != nullptr) {
+                    //	removeItem(item);
+                    //	gc->~Drawing();
+                    //}
+                }
+            }
+
 		}
 	}
 	_controlIsPressed = (keyEvent->key() == Qt::Key_Control);
@@ -878,6 +1051,9 @@ void ModelGraphicsScene::setParentWidget(QWidget *parentWidget) {
 	_parentWidget = parentWidget;
 }
 
+void ModelGraphicsScene::setDrawingMode(DrawingMode drawingMode) {
+    _drawingMode = drawingMode;
+}
 
 QList<GraphicalModelComponent*>* ModelGraphicsScene::graphicalModelComponentItems(){
     QList<GraphicalModelComponent*>* list = new QList<GraphicalModelComponent*>();
