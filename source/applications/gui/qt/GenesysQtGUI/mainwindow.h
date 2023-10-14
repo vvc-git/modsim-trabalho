@@ -42,6 +42,7 @@ private slots:
 	void on_actionEditGroup_triggered();
 	void on_actionEditUngroup_triggered();
 
+    void on_actionShowGrid_triggered();
 	void on_actionShowRule_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
@@ -137,6 +138,8 @@ private slots:
 	void on_TextCodeEditor_textChanged();
 
 
+
+    void on_actionShowSnap_triggered();
 
 private: // VIEW
 

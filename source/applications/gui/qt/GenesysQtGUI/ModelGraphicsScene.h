@@ -70,7 +70,7 @@ class ModelGraphicsScene : public QGraphicsScene {
 public:
 	ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent = nullptr);
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
-	virtual ~ModelGraphicsScene();
+    virtual ~ModelGraphicsScene();
 public: // editing graphic model
     GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
     GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort, unsigned int portSourceConnection, unsigned int portDestinationConnection);
@@ -91,7 +91,16 @@ public: // editing graphic model
     QList<GraphicalModelComponent*>* graphicalModelComponentItems();
     GraphicalModelComponent* findGraphicalModelComponent(Util::identification id);
 public:
-	void showGrid();
+    struct GRID {
+        unsigned int interval;
+        QPen pen;
+        std::list<QGraphicsLineItem *> *lines;
+        bool visible;
+        void clear();
+    };
+    GRID *grid();
+    void showGrid();
+    void snapItemsToGrid();
     QUndoStack* getUndoStack();
     Simulator* getSimulator();
     void setUndoStack(QUndoStack* undo);
@@ -101,6 +110,8 @@ public:
 	void setParentWidget(QWidget *parentWidget);
 	unsigned short connectingStep() const;
 	void setConnectingStep(unsigned short connectingStep);
+    void setSnapToGrid(bool activated);
+    bool getSnapToGrid();
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -130,12 +141,7 @@ protected: // virtual functions
 	virtual void wheelEvent(QGraphicsSceneWheelEvent *wheelEvent);
 
 private:
-
-	struct GRID {
-		unsigned int interval = TraitsGUI<GScene>::gridInterval;//20;
-		QPen pen = QPen(TraitsGUI<GScene>::gridColor);//QPen(Qt::gray); //TODO: To use TraitsGUI<GScene>::gridColor must solve myrgba first
-		std::list<QGraphicsLineItem*>* lines = new std::list<QGraphicsLineItem*>();
-	} _grid;
+    GRID _grid;
 	Simulator* _simulator = nullptr;
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
@@ -146,6 +152,7 @@ private:
 private:
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
 	bool _controlIsPressed = false;
+    bool _snapToGrid = false;
 	GraphicalComponentPort* _sourceGraphicalComponentPort;
 private:
 	// IMPORTANT. MUST BE CONSISTENT WITH SIMULATOR->MODEL

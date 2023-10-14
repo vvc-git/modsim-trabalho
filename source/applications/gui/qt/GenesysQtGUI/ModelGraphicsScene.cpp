@@ -44,7 +44,12 @@
 #include "actions/MoveUndoCommand.h"
 
 ModelGraphicsScene::ModelGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent) : QGraphicsScene(x, y, width, height, parent) {
-	// grid
+    // grid
+    _grid.interval = TraitsGUI<GScene>::gridInterval; // 20;
+    _grid.pen = QPen(TraitsGUI<GScene>::gridColor);	  // QPen(Qt::gray); //TODO: To use TraitsGUI<GScene>::gridColor must solve myrgba first
+    _grid.lines = new std::list<QGraphicsLineItem *>();
+    _grid.visible = false;
+
 	_grid.pen.setWidth(TraitsGUI<GScene>::gridPenWidth);
 	_grid.pen.setStyle(Qt::DotLine);
 }
@@ -319,23 +324,113 @@ void ModelGraphicsScene::removeAnimation() {}
 //------------------------------------------------------------------------
 
 
-void ModelGraphicsScene::showGrid() {
-	// remove existing grid
-	if (items().size() > 0) {
-	//	for (QGraphicsLineItem* line : *_grid.lines) {
-	//		removeItem((QGraphicsItem*) line);
-	//	}
-	}
-	_grid.lines->clear();
-	// add new grid
-	for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
-		QGraphicsLineItem* line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
-	}
-	for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
-		QGraphicsLineItem* line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
-	//	_grid.lines->insert(_grid.lines->end(), line);
-	}
+// retorna o elemento _grid que é privado
+ModelGraphicsScene::GRID *ModelGraphicsScene::grid() {
+    return &_grid;
+}
+
+// implementação da função clear() da estrutura GRID
+void ModelGraphicsScene::GRID::clear() {
+    // limpa e libera a memória da lista de linhas
+    for (QGraphicsLineItem *line : *lines) {
+        delete line;
+    }
+    lines->clear();
+
+    // volta a visibilidade pra false
+    visible = false;
+}
+
+void ModelGraphicsScene::showGrid()
+{
+    // pego a informação se o grid está visível
+    // obs.: o grid é criado uma única vez para a cena e habilitado como visível ou não. =
+
+    // se eu quero que o grid fique visível, verifico se o grid já está desenhado ou não
+    if (_grid.visible) {
+        // se não tenho linhas no grid, eu as desenho
+        if (_grid.lines->size() <= 0) {
+            // add new grid
+            for (int i = sceneRect().left(); i < sceneRect().right(); i += _grid.interval) {
+                QGraphicsLineItem *line = addLine(i, sceneRect().top(), i, sceneRect().bottom(), _grid.pen);
+                line->setZValue(-1.0);
+                line->setVisible(true);
+                _grid.lines->insert(_grid.lines->end(), line);
+            }
+            for (int j = sceneRect().top(); j < sceneRect().bottom(); j += _grid.interval) {
+                QGraphicsLineItem *line = addLine(sceneRect().left(), j, sceneRect().right(), j, _grid.pen);
+                line->setZValue(-1.0);
+                line->setVisible(true);
+                _grid.lines->insert(_grid.lines->end(), line);
+            }
+        }
+        // se eu já tenho meu grid desenhado eu apenas o torno visível
+        else {
+            for (QGraphicsLineItem *line : *_grid.lines) {
+                line->setVisible(true);
+            }
+        }
+    }
+    // se eu quero esconder o grid eu tiro a visibilidade das linhas
+    else {
+        for (QGraphicsLineItem *line : *_grid.lines) {
+            line->setVisible(false);
+        }
+    }
+
+    // troco o valor de visible
+    _grid.visible = !_grid.visible;
+}
+
+void ModelGraphicsScene::setSnapToGrid(bool activated)
+{
+    _snapToGrid = activated;
+}
+
+bool ModelGraphicsScene::getSnapToGrid() {
+    return _snapToGrid;
+}
+
+void ModelGraphicsScene::snapItemsToGrid()
+{
+    if (_snapToGrid) {
+        // Obtenha a lista de visualizações associadas a esta cena
+
+        QList<QGraphicsItem*>* items = getGraphicalModelComponents();
+        int num_items = items->size();
+
+        for (int i = 0; i < num_items; i++) {
+            QGraphicsItem* item = items->at(i);
+
+            GraphicalModelComponent* modelItem = dynamic_cast<GraphicalModelComponent*>(item);
+            if (modelItem) {
+                // Obtenha a posição atual do item
+                QPointF itemPos = modelItem->pos();
+
+                // Calcule a nova posição ajustada ao grid
+                qreal x = qRound(itemPos.x() / _grid.interval) * _grid.interval;
+                qreal y = qRound(itemPos.y() / _grid.interval) * _grid.interval;
+
+
+                // Verifique se a nova posição está dentro dos limites da cena
+                if (x < sceneRect().left()) {
+                    x = sceneRect().left();
+                }
+                else if (x > sceneRect().right()) {
+                    x = sceneRect().right();
+                }
+                if (y < sceneRect().top()) {
+                    y = sceneRect().top();
+                }
+                else if (y > sceneRect().bottom()) {
+                    y = sceneRect().bottom();
+                }
+
+                //Defina a nova posição ajustada ao grid
+                modelItem->setPos(x, y);
+            }
+        }
+    }
 }
 
 QUndoStack* ModelGraphicsScene::getUndoStack() {
@@ -349,6 +444,7 @@ Simulator* ModelGraphicsScene::getSimulator() {
 void ModelGraphicsScene::setUndoStack(QUndoStack* undo) {
     _undoStack = undo;
 }
+
 
 void ModelGraphicsScene::beginConnection() {
 	_connectingStep = 1;
@@ -408,6 +504,8 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 
 void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
+
+    snapItemsToGrid();
 
     QList<GraphicalModelComponent*> components;
     QList<QPointF> oldPositions;

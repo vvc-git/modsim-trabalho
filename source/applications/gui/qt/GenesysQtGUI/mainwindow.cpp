@@ -1846,10 +1846,7 @@ void MainWindow::on_actionEditCopy_triggered() {
 
 
 void MainWindow::on_actionEditPaste_triggered() {
-    // _showMessageNotImplemented();
-    // Desenho na tela
-
-    // Cena
+	    // Cena
     if (_copied.plugin != nullptr &&
         _copied.component != nullptr &&
         _copied.position != QPointF() &&
@@ -1874,11 +1871,13 @@ void MainWindow::on_actionEditPaste_triggered() {
     }
 }
 
+void MainWindow::on_actionShowGrid_triggered() {
+    ui->graphicsView->getScene()->showGrid();
+}
 
 void MainWindow::on_actionShowRule_triggered() {
 	_showMessageNotImplemented();
 }
-
 
 void MainWindow::on_actionShowGuides_triggered() {
 	_showMessageNotImplemented();
@@ -2228,6 +2227,12 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
+
+    // quando a cena é fechada, limpo o grid associado a ela
+    ui->graphicsView->getScene()->grid()->clear();
+    // volto o botao de grid para "não clicado"
+    ui->actionShowGrid->setChecked(false);
+
     ui->graphicsView->getScene()->getUndoStack()->clear();
     ui->graphicsView->getScene()->getUndoStack()->cleanIndex();
     ui->graphicsView->getScene()->clearGraphicalModelConnections();
@@ -2285,3 +2290,17 @@ void MainWindow::on_actionSimulationConfigure_triggered()
 	DialogSimulationConfigure* dialog = new DialogSimulationConfigure(this);
 	dialog->show();
 }
+
+
+
+
+void MainWindow::on_actionShowSnap_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    if (scene->getSnapToGrid()) {
+        scene->setSnapToGrid(false);
+    } else {
+        scene->setSnapToGrid(true);
+    }
+}
+
