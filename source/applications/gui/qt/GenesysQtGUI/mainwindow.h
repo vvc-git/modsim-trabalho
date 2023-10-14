@@ -43,6 +43,7 @@ private slots:
 	void on_actionEditUngroup_triggered();
 
 	void on_actionShowRule_triggered();
+    void on_actionShowGrid_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
 
@@ -199,7 +200,8 @@ private: // view
 	void _generateGraphicalModelFromModel();
 	//bool _checkStartSimulation();
 private: // graphical model persistence
-	bool _saveGraphicalModel(std::string filename);
+    bool _saveGraphicalModel(QString filename);
+    bool _saveTextModel(QFile *saveFile, QString data);
 	Model* _loadGraphicalModel(std::string filename);
 private:
 	QColor myrgba(uint64_t color); // TODO: Should NOT be here, but in UtilGUI.h, but then it generates multiple definitions error
