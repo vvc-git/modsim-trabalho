@@ -22,9 +22,13 @@ void DeleteUndoCommand::undo() {
     myGraphicsScene->addItem(myGraphicalModelComponent);
     myGraphicsScene->getGraphicalModelComponents()->append(myGraphicalModelComponent);
 
+    //refaz as conexões
+    myGraphicsScene->reconnectConnectionsOnRedoComponent(myGraphicalModelComponent);
+
     //notify graphical model change
     GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::CREATE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
     dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+
     myGraphicsScene->update();
 }
 
@@ -36,9 +40,12 @@ void DeleteUndoCommand::redo() {
     myGraphicsScene->removeItem(myGraphicalModelComponent);
     myGraphicsScene->getGraphicalModelComponents()->removeOne(myGraphicalModelComponent);
 
-    myGraphicsScene->clearConnections(myGraphicalModelComponent);
+    //limpa as conexoes
+    myGraphicsScene->handleClearConnectionsOnDeleteComponent(myGraphicalModelComponent);
 
     //notify graphical model change
     GraphicalModelEvent* modelGraphicsEvent = new GraphicalModelEvent(GraphicalModelEvent::EventType::REMOVE, GraphicalModelEvent::EventObjectType::COMPONENT, myGraphicalModelComponent);
     dynamic_cast<ModelGraphicsView*> (myGraphicsScene->views().at(0))->notifySceneGraphicalModelEventHandler(modelGraphicsEvent);
+
+    myGraphicsScene->update();
 }

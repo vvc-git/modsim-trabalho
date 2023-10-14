@@ -17,6 +17,8 @@ void MoveUndoCommand::undo() {
         item->setOldPosition(oldPos);
         _myGraphicsScene->update();
     }
+
+    _myGraphicsScene->update();
 }
 
 void MoveUndoCommand::redo() {
@@ -31,6 +33,8 @@ void MoveUndoCommand::redo() {
     }
     //_myGraphicsScene->clearSelection();
     _firstExecution = false;
+
+    _myGraphicsScene->update();
 }
 
 //bool MoveUndoCommand::mergeWith(const QUndoCommand *command) {

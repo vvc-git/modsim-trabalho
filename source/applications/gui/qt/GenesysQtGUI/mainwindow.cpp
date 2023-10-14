@@ -250,7 +250,7 @@ void MainWindow::_recursivalyGenerateGraphicalModelFromModel(ModelComponent* com
 			GraphicalModelComponent *destinyGmc = map->at(nextComp);
 			sourceGraphicalPort = gmc->getGraphicalOutputPorts().at(connectionMap.first);
 			destinyGraphicalPort = destinyGmc->getGraphicalInputPorts().at(connectionMap.second->channel.portNumber);
-			scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort);
+            scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort, connectionMap.first, connectionMap.second->channel.portNumber);
 			*x = xIni;
 			*y+= deltaY;
 			sequenceInLine--;
@@ -2108,6 +2108,7 @@ void MainWindow::on_actionModelClose_triggered()
 	_insertCommandInConsole("close");
     ui->graphicsView->getScene()->getUndoStack()->clear();
     ui->graphicsView->getScene()->getUndoStack()->cleanIndex();
+    ui->graphicsView->getScene()->clearGraphicalModelConnections();
     ui->graphicsView->getScene()->clearGraphicalModelComponents();
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());

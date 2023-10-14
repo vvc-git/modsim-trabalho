@@ -316,6 +316,19 @@ QList<GraphicalComponentPort *> GraphicalModelComponent::getGraphicalInputPorts(
 	return _graphicalInputPorts;
 }
 
+unsigned int GraphicalModelComponent::getOcupiedInputPorts() const {
+    return _ocupiedInputPorts;
+}
+unsigned int GraphicalModelComponent::getOcupiedOutputPorts() const {
+    return _ocupiedOutputPorts;
+}
+void GraphicalModelComponent::setOcupiedInputPorts(unsigned int value) {
+    _ocupiedInputPorts = value;
+}
+void GraphicalModelComponent::setOcupiedOutputPorts(unsigned int value) {
+    _ocupiedOutputPorts = value;
+}
+
 /*
 void ModelComponentGraphicsItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event){
 

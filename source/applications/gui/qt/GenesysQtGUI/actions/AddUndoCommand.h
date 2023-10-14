@@ -18,6 +18,7 @@ private:
     GraphicalModelComponent *myGraphicalModelComponent;
     ModelGraphicsScene *myGraphicsScene;
     QPointF initialPosition;
+    bool firstExecution;
 };
 
 #endif // ADDUNDOCOMMAND_H

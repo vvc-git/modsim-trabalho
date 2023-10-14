@@ -73,12 +73,13 @@ public:
 	virtual ~ModelGraphicsScene();
 public: // editing graphic model
     GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
-	GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
+    GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort, unsigned int portSourceConnection, unsigned int portDestinationConnection);
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
 	void addDrawing();
 	void addAnimation();
-	void removeGraphicalModelComponent(GraphicalModelComponent* gmc);
-    void clearConnections(GraphicalModelComponent* gmc);
+    void removeComponent(GraphicalModelComponent* gmc);
+    void handleClearConnectionsOnDeleteComponent(GraphicalModelComponent* gmc);
+    void reconnectConnectionsOnRedoComponent(GraphicalModelComponent* gmc);
 	void removeModelComponentInModel(GraphicalModelComponent* gmc);
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
@@ -86,6 +87,7 @@ public: // editing graphic model
 	void removeDrawing();
 	void removeAnimation();
     void clearGraphicalModelComponents();
+    void clearGraphicalModelConnections();
     QList<GraphicalModelComponent*>* graphicalModelComponentItems();
     GraphicalModelComponent* findGraphicalModelComponent(Util::identification id);
 public:
@@ -138,6 +140,7 @@ private:
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
     QList<GraphicalModelComponent*> _allGraphicalModelComponents;
+    QList<GraphicalConnection*> _allGraphicalConnections;
     QUndoStack *_undoStack = nullptr;
 
 private:
