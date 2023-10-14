@@ -1981,7 +1981,6 @@ void MainWindow::on_actionEditCut_triggered() {
     if (ui->graphicsView->scene()->selectedItems().size() > 0) {
 
         // Componenente sendo selecionado
-        // TODO: PEGANDO HARDCODED
         QGraphicsItem * item = ui->graphicsView->scene()->selectedItems().at(0);
 
         // Trasnformando em um elemento grafico de modelo
@@ -2029,7 +2028,6 @@ void MainWindow::on_actionEditCopy_triggered() {
     if (ui->graphicsView->scene()->selectedItems().size() > 0) {
 
         // Componenente sendo selecionado
-        // TODO: PEGANDO HARDCODED
         QGraphicsItem * item = ui->graphicsView->scene()->selectedItems().at(0);
 
         // Trasnformando em um elemento grafico de modelo
