@@ -251,7 +251,7 @@ void MainWindow::_recursivalyGenerateGraphicalModelFromModel(ModelComponent* com
 			GraphicalModelComponent *destinyGmc = map->at(nextComp);
 			sourceGraphicalPort = gmc->getGraphicalOutputPorts().at(connectionMap.first);
 			destinyGraphicalPort = destinyGmc->getGraphicalInputPorts().at(connectionMap.second->channel.portNumber);
-			scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort);
+            scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort, connectionMap.first, connectionMap.second->channel.portNumber);
 			*x = xIni;
 			*y+= deltaY;
 			sequenceInLine--;
@@ -1251,6 +1251,10 @@ void MainWindow::_initModelGraphicsView() {
 	connect(ui->graphicsView->scene(), &QGraphicsScene::changed, this, &MainWindow::sceneChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::focusItemChanged, this, &MainWindow::sceneFocusItemChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::selectionChanged, this, &MainWindow::sceneSelectionChanged);
+
+    ui->graphicsView->getScene()->setUndoStack(new QUndoStack(this));
+    ui->actionEditUndo = ui->graphicsView->getScene()->getUndoStack()->createUndoAction((QObject*) this, tr("&actionEditUndo"));
+    ui->actionEditRedo = ui->graphicsView->getScene()->getUndoStack()->createRedoAction((QObject*) this, tr("&actionEditRedo"));
 }
 
 void MainWindow::_setOnEventHandlers() {
@@ -1726,12 +1730,16 @@ void MainWindow::on_actionAboutGetInvolved_triggered() {
 }
 
 void MainWindow::on_actionEditUndo_triggered() {
-    _showMessageNotImplemented();
+    if (ui->graphicsView->getScene()->getUndoStack()) {
+        ui->graphicsView->getScene()->getUndoStack()->undo();
+    }
 }
 
 
 void MainWindow::on_actionEditRedo_triggered() {
-	_showMessageNotImplemented();
+    if (ui->graphicsView->getScene()->getUndoStack()) {
+        ui->graphicsView->getScene()->getUndoStack()->redo();
+    }
 }
 
 
@@ -1792,7 +1800,9 @@ void MainWindow::on_actionEditCut_triggered() {
         ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
 
         // Removendo o componente graficamente
-        scene->removeGraphicalModelComponent(previous);
+        // scene->removeGraphicalModelComponent(previous);
+        scene->removeComponent(previous);
+
 
     }
 }
@@ -2085,6 +2095,7 @@ void MainWindow::on_actionViewConfigure_triggered()
 //}
 
 void MainWindow::_initUiForNewModel(Model* m) {
+    _actualizeUndo();
 	ui->graphicsView->getScene()->showGrid(); //@TODO: Bad place to be
 	ui->textEdit_Simulation->clear();
 	ui->textEdit_Reports->clear();
@@ -2122,6 +2133,14 @@ void MainWindow::_initUiForNewModel(Model* m) {
 	_actualizeActions();
 	_actualizeTabPanes();
 }
+
+void MainWindow::_actualizeUndo() {
+    undoView = new QUndoView(ui->graphicsView->getScene()->getUndoStack());
+    undoView->setWindowTitle(tr("Command List"));
+    undoView->hide();
+    undoView->setAttribute(Qt::WA_QuitOnClose, false);
+}
+
 void MainWindow::on_actionModelNew_triggered() {
 	Model* m;
 	if ((m = simulator->getModels()->current()) != nullptr) {
@@ -2209,6 +2228,10 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
+    ui->graphicsView->getScene()->getUndoStack()->clear();
+    ui->graphicsView->getScene()->getUndoStack()->cleanIndex();
+    ui->graphicsView->getScene()->clearGraphicalModelConnections();
+    ui->graphicsView->getScene()->clearGraphicalModelComponents();
 	ui->graphicsView->clear();
 	simulator->getModels()->remove(simulator->getModels()->current());
 	_actualizeActions();

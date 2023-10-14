@@ -50,7 +50,7 @@ public:
 public: // editing graphic model
 	// TODO: AddGraphicalModelComponent should be only on scene
 	//GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position);
-	//bool removeGraphicalModelComponent(GraphicalModelComponent* gmc);
+    //bool removeComponent(GraphicalModelComponent* gmc);
 	//bool addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
 	//bool removeGraphicalConnection(GraphicalConnection* gc);
 	//bool addDrawing();

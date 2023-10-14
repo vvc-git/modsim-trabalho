@@ -36,6 +36,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGraphicsRectItem>
 #include <QTreeWidgetItem>
+#include <QUndoStack>
 #include "graphicals/GraphicalModelComponent.h"
 #include "graphicals/GraphicalComponentPort.h"
 #include "TraitsGUI.h"
@@ -71,21 +72,29 @@ public:
 	ModelGraphicsScene(const ModelGraphicsScene& orig);
 	virtual ~ModelGraphicsScene();
 public: // editing graphic model
-	GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
-	GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort);
+    GraphicalModelComponent* addGraphicalModelComponent(Plugin* plugin, ModelComponent* component, QPointF position, QColor color = Qt::blue);
+    GraphicalConnection* addGraphicalConnection(GraphicalComponentPort* sourcePort, GraphicalComponentPort* destinationPort, unsigned int portSourceConnection, unsigned int portDestinationConnection);
 	GraphicalModelDataDefinition* addGraphicalModelDataDefinition(Plugin* plugin, ModelDataDefinition* element, QPointF position, QColor color = Qt::blue);
 	void addDrawing();
 	void addAnimation();
-	void removeGraphicalModelComponent(GraphicalModelComponent* gmc);
+    void removeComponent(GraphicalModelComponent* gmc);
+    void handleClearConnectionsOnDeleteComponent(GraphicalModelComponent* gmc);
+    void reconnectConnectionsOnRedoComponent(GraphicalModelComponent* gmc);
 	void removeModelComponentInModel(GraphicalModelComponent* gmc);
 	void removeGraphicalConnection(GraphicalConnection* gc);
 	void removeConnectionInModel(GraphicalConnection* gc);
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
 	void removeDrawing();
 	void removeAnimation();
-	//QList<GraphicalModelComponent*>* graphicalModelMomponentItems();
+    void clearGraphicalModelComponents();
+    void clearGraphicalModelConnections();
+    QList<GraphicalModelComponent*>* graphicalModelComponentItems();
+    GraphicalModelComponent* findGraphicalModelComponent(Util::identification id);
 public:
 	void showGrid();
+    QUndoStack* getUndoStack();
+    Simulator* getSimulator();
+    void setUndoStack(QUndoStack* undo);
 	void beginConnection();
 	void setSimulator(Simulator *simulator);
 	void setObjectBeingDragged(QTreeWidgetItem* objectBeingDragged);
@@ -130,6 +139,9 @@ private:
 	Simulator* _simulator = nullptr;
 	QTreeWidgetItem* _objectBeingDragged = nullptr;
 	QWidget* _parentWidget;
+    QList<GraphicalModelComponent*> _allGraphicalModelComponents;
+    QList<GraphicalConnection*> _allGraphicalConnections;
+    QUndoStack *_undoStack = nullptr;
 
 private:
 	unsigned short _connectingStep = 0; //0:nothing, 1:waiting click on source, 2: waiting click on destination and after that creates the connection and backs to 0
