@@ -104,9 +104,7 @@ GraphicalModelComponent::GraphicalModelComponent(Plugin* plugin, ModelComponent*
 GraphicalModelComponent::GraphicalModelComponent(const GraphicalModelComponent& orig): GraphicalModelDataDefinition(orig) {
 }
 
-GraphicalModelComponent::~GraphicalModelComponent() {
-	//_component->~ModelComponent();
-}
+GraphicalModelComponent::~GraphicalModelComponent() {}
 
 QRectF GraphicalModelComponent::boundingRect() const {
 	//qreal penWidth = _pen.width();
@@ -286,8 +284,22 @@ ModelComponent* GraphicalModelComponent::getComponent() const {
 	return _component;
 }
 
+QPointF GraphicalModelComponent::getOldPosition() const {
+    return _oldPosition;
+}
+
+
+void GraphicalModelComponent::setOldPosition(QPointF oldPosition) {
+    _oldPosition = oldPosition;
+}
+
+
 QColor GraphicalModelComponent::getColor() const {
     return _color;
+}
+
+qreal GraphicalModelComponent::getHeight() const {
+    return _height;
 }
 
 bool GraphicalModelComponent::sceneEvent(QEvent *event) {
@@ -300,6 +312,19 @@ QList<GraphicalComponentPort *> GraphicalModelComponent::getGraphicalOutputPorts
 
 QList<GraphicalComponentPort *> GraphicalModelComponent::getGraphicalInputPorts() const {
 	return _graphicalInputPorts;
+}
+
+unsigned int GraphicalModelComponent::getOcupiedInputPorts() const {
+    return _ocupiedInputPorts;
+}
+unsigned int GraphicalModelComponent::getOcupiedOutputPorts() const {
+    return _ocupiedOutputPorts;
+}
+void GraphicalModelComponent::setOcupiedInputPorts(unsigned int value) {
+    _ocupiedInputPorts = value;
+}
+void GraphicalModelComponent::setOcupiedOutputPorts(unsigned int value) {
+    _ocupiedOutputPorts = value;
 }
 
 /*

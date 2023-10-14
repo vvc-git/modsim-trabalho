@@ -6,6 +6,7 @@
 #include "dialogs/dialogsimulationconfigure.h"
 #include "dialogs/dialogpluginmanager.h"
 #include "dialogs/dialogsystempreferences.h"
+#include "dialogs/DialogFind.h"
 // Kernel
 #include "../../../../kernel/simulator/SinkModelComponent.h"
 #include "../../../../kernel/simulator/Attribute.h"
@@ -42,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Genesys Simulator
 	simulator = new Simulator();
     simulator->getTracer()->setTraceLevel(TraitsApp<GenesysApplication_if>::traceLevel);
-	simulator->getTracer()->addTraceHandler<MainWindow>(this, &MainWindow::_simulatorTraceHandler);
+    simulator->getTracer()->addTraceHandler<MainWindow>(this, &MainWindow::_simulatorTraceHandler);
 	simulator->getTracer()->addTraceErrorHandler<MainWindow>(this, &MainWindow::_simulatorTraceErrorHandler);
 	simulator->getTracer()->addTraceReportHandler<MainWindow>(this, &MainWindow::_simulatorTraceReportsHandler);
 	simulator->getTracer()->addTraceSimulationHandler<MainWindow>(this, &MainWindow::_simulatorTraceSimulationHandler);
@@ -401,7 +402,7 @@ Model *MainWindow::_loadGraphicalModel(std::string filename) {
             //graphically
             GraphicalComponentPort* sourceport = source->getGraphicalOutputPorts().at(portSource);
             GraphicalComponentPort* destport = destination->getGraphicalInputPorts().at(portDestination);
-            ui->graphicsView->getScene()->addGraphicalConnection(sourceport, destport);
+            ui->graphicsView->getScene()->addGraphicalConnection(sourceport, destport, portSource, portDestination);
         }
 
         QList<GraphicalModelComponent*> *models = ui->graphicsView->getScene()->graphicalModelComponentItems();
@@ -461,7 +462,7 @@ void MainWindow::_recursivalyGenerateGraphicalModelFromModel(ModelComponent* com
 			GraphicalModelComponent *destinyGmc = map->at(nextComp);
 			sourceGraphicalPort = gmc->getGraphicalOutputPorts().at(connectionMap.first);
 			destinyGraphicalPort = destinyGmc->getGraphicalInputPorts().at(connectionMap.second->channel.portNumber);
-			scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort);
+            scene->addGraphicalConnection(sourceGraphicalPort, destinyGraphicalPort, connectionMap.first, connectionMap.second->channel.portNumber);
 			*x = xIni;
 			*y+= deltaY;
 			sequenceInLine--;
@@ -513,8 +514,8 @@ void MainWindow::_actualizeActions() {
 	unsigned int maxCommandundoRedo = 0; //@TODO
 	if (opened) {
 		running = simulator->getModels()->current()->getSimulation()->isRunning();
-		paused = simulator->getModels()->current()->getSimulation()->isPaused();
-		numSelectedGraphicals = 0;//@TODO get total of selected graphical objects (this should br on another "actualize", I think
+        paused = simulator->getModels()->current()->getSimulation()->isPaused();
+        numSelectedGraphicals = 0;//@TODO get total of selected graphical objects (this should br on another "actualize", I think
 	}
 	//
 	ui->graphicsView->setEnabled(opened);
@@ -548,8 +549,10 @@ void MainWindow::_actualizeActions() {
 
 	// based on SELECTED GRAPHICAL OBJECTS or on COMMANDS DONE (UNDO/REDO)
 	ui->toolBarArranje->setEnabled(numSelectedGraphicals>0);
-	ui->actionEditCopy->setEnabled(numSelectedGraphicals>0);
-	ui->actionEditCut->setEnabled(numSelectedGraphicals>0);
+	// TODO: MUDAR, ESTÁ HARDCODED, DEVERIA SER DISPONIBILIZADO COM UM COMPONENENTE FOSSE 
+	// TODO: SELECIONADO
+    ui->actionEditCopy->setEnabled(1);
+    ui->actionEditCut->setEnabled(1);
 	ui->actionEditDelete->setEnabled(numSelectedGraphicals>0);
 	ui->actionEditUndo->setEnabled(actualCommandundoRedo>0);
 	ui->actionEditRedo->setEnabled(actualCommandundoRedo<maxCommandundoRedo);
@@ -1403,6 +1406,16 @@ void MainWindow::_onSceneMouseEvent(QGraphicsSceneMouseEvent* mouseEvent) {
 	ui->labelMousePos->setText(QString::fromStdString("<" + std::to_string((int) pos.x()) + "," + std::to_string((int) pos.y()) + ">"));
 }
 
+void MainWindow::_onSceneWheelInEvent() {
+    int value = ui->horizontalSlider_ZoomGraphical->value();
+    ui->horizontalSlider_ZoomGraphical->setValue(value + TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
+void MainWindow::_onSceneWheelOutEvent() {
+    int value = ui->horizontalSlider_ZoomGraphical->value();
+    ui->horizontalSlider_ZoomGraphical->setValue(value - TraitsGUI<GMainWindow>::zoomButtonChange);
+}
+
 void MainWindow::_onSceneGraphicalModelEvent(GraphicalModelEvent* event) {
 	_actualizeTabPanes();
 }
@@ -1446,11 +1459,17 @@ void MainWindow::sceneGraphicalModelChanged() {
 //-----------------------------------------
 
 void MainWindow::_initModelGraphicsView() {
-	((ModelGraphicsView*) (ui->graphicsView))->setSceneMouseEventHandler(this, &MainWindow::_onSceneMouseEvent);
-	((ModelGraphicsView*) (ui->graphicsView))->setGraphicalModelEventHandler(this, &MainWindow::_onSceneGraphicalModelEvent);
+    ((ModelGraphicsView*) (ui->graphicsView))->setSceneMouseEventHandler(this, &MainWindow::_onSceneMouseEvent);
+    ((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelInEventHandler(this, &MainWindow::_onSceneWheelInEvent);
+    ((ModelGraphicsView *)(ui->graphicsView))->setSceneWheelOutEventHandler(this, &MainWindow::_onSceneWheelOutEvent);
+    ((ModelGraphicsView*) (ui->graphicsView))->setGraphicalModelEventHandler(this, &MainWindow::_onSceneGraphicalModelEvent);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::changed, this, &MainWindow::sceneChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::focusItemChanged, this, &MainWindow::sceneFocusItemChanged);
 	connect(ui->graphicsView->scene(), &QGraphicsScene::selectionChanged, this, &MainWindow::sceneSelectionChanged);
+
+    ui->graphicsView->getScene()->setUndoStack(new QUndoStack(this));
+    ui->actionEditUndo = ui->graphicsView->getScene()->getUndoStack()->createUndoAction((QObject*) this, tr("&actionEditUndo"));
+    ui->actionEditRedo = ui->graphicsView->getScene()->getUndoStack()->createRedoAction((QObject*) this, tr("&actionEditRedo"));
 }
 
 void MainWindow::_setOnEventHandlers() {
@@ -1927,17 +1946,28 @@ void MainWindow::on_actionAboutGetInvolved_triggered() {
 }
 
 void MainWindow::on_actionEditUndo_triggered() {
-	_showMessageNotImplemented();
+    if (ui->graphicsView->getScene()->getUndoStack()) {
+        ui->graphicsView->getScene()->getUndoStack()->undo();
+    }
 }
 
 
 void MainWindow::on_actionEditRedo_triggered() {
-	_showMessageNotImplemented();
+    if (ui->graphicsView->getScene()->getUndoStack()) {
+        ui->graphicsView->getScene()->getUndoStack()->redo();
+    }
 }
 
 
 void MainWindow::on_actionEditFind_triggered() {
-	_showMessageNotImplemented();
+
+        // Cria um novo diálogo para Buscar componentes
+        DialogFind *find = new DialogFind(this, ui->graphicsView->getScene());
+
+        // Mostra esse dialogo na tela
+        find->show();
+
+        if (find->exec() == QDialog::Accepted) find->setFocus();
 }
 
 
@@ -1947,27 +1977,122 @@ void MainWindow::on_actionEditReplace_triggered() {
 
 
 void MainWindow::on_actionEditCut_triggered() {
-	_showMessageNotImplemented();
+
+    if (ui->graphicsView->scene()->selectedItems().size() > 0) {
+
+        // Componenente sendo selecionado
+        // TODO: PEGANDO HARDCODED
+        QGraphicsItem * item = ui->graphicsView->scene()->selectedItems().at(0);
+
+        // Trasnformando em um elemento grafico de modelo
+        GraphicalModelComponent* previous = (GraphicalModelComponent*) item;
+
+        // Componente
+        ModelComponent * previousComp = previous->getComponent();
+
+        // Nome do plugin para a copia do componente
+        std::string pluginname = previousComp->getClassname();
+
+        // Plugin para a copia do novo component
+        Plugin* plugin = simulator->getPlugins()->find(pluginname);
+
+        // Ajustando a posicao da copia
+        QPointF position = item->pos();
+        position.setX(item->pos().x()+150);
+
+        // Copiando a cor
+        QColor color = previous->getColor();
+
+        _copied.plugin = plugin;
+        _copied.component = previousComp;
+        _copied.position = position;
+        _copied.color = color;
+        _copied.cut = true;
+
+        // Removendo o componente do modelo
+        simulator->getModels()->current()->getComponents()->remove(previousComp);
+
+        // Pega a cena
+        ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+        // Removendo o componente graficamente
+        // scene->removeGraphicalModelComponent(previous);
+        scene->removeComponent(previous);
+
+
+    }
 }
 
 
 void MainWindow::on_actionEditCopy_triggered() {
-	_showMessageNotImplemented();
+
+    if (ui->graphicsView->scene()->selectedItems().size() > 0) {
+
+        // Componenente sendo selecionado
+        // TODO: PEGANDO HARDCODED
+        QGraphicsItem * item = ui->graphicsView->scene()->selectedItems().at(0);
+
+        // Trasnformando em um elemento grafico de modelo
+        GraphicalModelComponent* previous = (GraphicalModelComponent*) item;
+
+        // Componente
+        ModelComponent * previousComp = previous->getComponent();
+
+        // Nome do plugin para a copia do componente
+        std::string pluginname = previousComp->getClassname();
+
+        // Plugin para a copia do novo component
+        Plugin* plugin = simulator->getPlugins()->find(pluginname);
+
+        // Ajustando a posicao da copia
+        QPointF position = item->pos();
+        position.setX(item->pos().x()+150);
+
+        // Copiando a cor
+        QColor color = previous->getColor();
+
+        _copied.plugin = plugin;
+        _copied.component = previousComp;
+        _copied.position = position;
+        _copied.color = color;
+        _copied.cut = false;
+
+    }
 }
 
 
 void MainWindow::on_actionEditPaste_triggered() {
-	_showMessageNotImplemented();
+	    // Cena
+    if (_copied.plugin != nullptr &&
+        _copied.component != nullptr &&
+        _copied.position != QPointF() &&
+        _copied.color != QColor()) {
+
+        // Pega a cena
+        ModelGraphicsScene *scene = (ModelGraphicsScene *)(ui->graphicsView->scene());
+
+        // Se for copy past, cria um novo componente
+        if (!_copied.cut) {
+            // Copia do componente
+            _copied.component = (ModelComponent*) _copied.plugin->newInstance(simulator->getModels()->current());
+
+            _copied.position.setX(_copied.position.x()+100);
+
+        } else {
+            // Adiciona o componente do modelo
+            simulator->getModels()->current()->getComponents()->insert(_copied.component);
+        }
+
+        scene->addGraphicalModelComponent(_copied.plugin, _copied.component, _copied.position, _copied.color);
+    }
 }
 
+void MainWindow::on_actionShowGrid_triggered() {
+    ui->graphicsView->getScene()->showGrid();
+}
 
 void MainWindow::on_actionShowRule_triggered() {
 	_showMessageNotImplemented();
-}
-
-void MainWindow::on_actionShowGrid_triggered()
-{
-    ui->graphicsView->getScene()->showGrid();
 }
 
 void MainWindow::on_actionShowGuides_triggered() {
@@ -2160,6 +2285,7 @@ void MainWindow::on_actionViewConfigure_triggered()
 // }
 
 void MainWindow::_initUiForNewModel(Model* m) {
+    _actualizeUndo();
 	ui->graphicsView->getScene()->showGrid(); //@TODO: Bad place to be
 	ui->textEdit_Simulation->clear();
 	ui->textEdit_Reports->clear();
@@ -2197,6 +2323,14 @@ void MainWindow::_initUiForNewModel(Model* m) {
 	_actualizeActions();
 	_actualizeTabPanes();
 }
+
+void MainWindow::_actualizeUndo() {
+    undoView = new QUndoView(ui->graphicsView->getScene()->getUndoStack());
+    undoView->setWindowTitle(tr("Command List"));
+    undoView->hide();
+    undoView->setAttribute(Qt::WA_QuitOnClose, false);
+}
+
 void MainWindow::on_actionModelNew_triggered() {
 	Model* m;
 	if ((m = simulator->getModels()->current()) != nullptr) {
@@ -2281,10 +2415,29 @@ void MainWindow::on_actionModelClose_triggered()
 		}
 	}
 	_insertCommandInConsole("close");
-	ui->graphicsView->clear();
-	simulator->getModels()->remove(simulator->getModels()->current());
-	_actualizeActions();
-	_actualizeTabPanes();
+
+    // quando a cena é fechada, limpo o grid associado a ela
+    ui->graphicsView->getScene()->grid()->clear();
+    // volto o botao de grid para "não clicado"
+    ui->actionShowGrid->setChecked(false);
+
+    // limpando tudo a que se refere à cena
+    ui->graphicsView->getScene()->getUndoStack()->clear();
+    ui->graphicsView->getScene()->getUndoStack()->cleanIndex();
+    ui->graphicsView->getScene()->clearGraphicalModelConnections();
+    ui->graphicsView->getScene()->clearGraphicalModelComponents();
+    ui->graphicsView->getScene()->getGraphicalModelComponents()->clear();
+    ui->graphicsView->getScene()->clear();
+    ui->graphicsView->scene()->clear();
+    ui->graphicsView->clear();
+
+    // limpando tudo a que se refere ao modelo
+    simulator->getModels()->current()->getComponents()->getAllComponents()->clear();
+    simulator->getModels()->current()->getComponents()->clear();
+    simulator->getModels()->remove(simulator->getModels()->current());
+
+    _actualizeActions();
+    _actualizeTabPanes();
 	//QMessageBox::information(this, "Close Model", "Model successfully closed");
 }
 
@@ -2373,5 +2526,16 @@ void MainWindow::on_treeWidgetDataDefnitions_itemChanged(QTreeWidgetItem *item, 
         }
     }
 
+}
+
+
+void MainWindow::on_actionShowSnap_triggered()
+{
+    ModelGraphicsScene* scene = (ModelGraphicsScene*) (ui->graphicsView->scene());
+    if (scene->getSnapToGrid()) {
+        scene->setSnapToGrid(false);
+    } else {
+        scene->setSnapToGrid(true);
+    }
 }
 

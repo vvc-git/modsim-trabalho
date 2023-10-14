@@ -2,7 +2,7 @@
 #include "GraphicalModelComponent.h"
 #include <QPainter>
 
-GraphicalConnection::GraphicalConnection(GraphicalComponentPort* sourceGraphicalPort, GraphicalComponentPort* destinationGraphicalPort, QColor color, QGraphicsItem *parent) : QGraphicsObject(parent) {
+GraphicalConnection::GraphicalConnection(GraphicalComponentPort* sourceGraphicalPort, GraphicalComponentPort* destinationGraphicalPort, unsigned int portSourceConnection, unsigned int portDestinationConnection, QColor color, QGraphicsItem *parent) : QGraphicsObject(parent) {
 	//// connect in the model
 	//ModelComponent* sourceComponent = sourceGraphicalPort->graphicalComponent()->getComponent();
 	//ModelComponent* destComponent=destinationGraphicalPort->graphicalComponent()->getComponent();
@@ -11,10 +11,12 @@ GraphicalConnection::GraphicalConnection(GraphicalComponentPort* sourceGraphical
 	//sourceComponent->getConnections()->insertAtRank(sourceGraphicalPort->portNum(), _destinationConnection);
 	// connect graphically
 	_sourceGraphicalPort = sourceGraphicalPort;
-	_destinationGraphicalPort = destinationGraphicalPort;
+    _destinationGraphicalPort = destinationGraphicalPort;
 	_sourceConnection = new Connection({sourceGraphicalPort->graphicalComponent()->getComponent(), {sourceGraphicalPort->portNum()}});
-	_destinationConnection = new Connection({_destinationGraphicalPort->graphicalComponent()->getComponent(), {_destinationGraphicalPort->portNum()}});
-	_color = color;
+    _destinationConnection = new Connection({_destinationGraphicalPort->graphicalComponent()->getComponent(), {_destinationGraphicalPort->portNum()}});
+    _portSourceConnection = portSourceConnection;
+    _portDestinationConnection = portDestinationConnection;
+    _color = color;
 	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable);
 	setAcceptHoverEvents(true);
 	setAcceptTouchEvents(true);
@@ -155,4 +157,11 @@ Connection* GraphicalConnection::getDestination() const {
 
 bool GraphicalConnection::sceneEvent(QEvent *event) {
 	QGraphicsObject::sceneEvent(event);
+}
+
+unsigned int GraphicalConnection::getPortSourceConnection() const {
+    return _portSourceConnection;
+}
+unsigned int GraphicalConnection::getPortDestinationConnection() const {
+    return _portDestinationConnection;
 }

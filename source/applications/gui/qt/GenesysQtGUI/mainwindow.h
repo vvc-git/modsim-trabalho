@@ -5,7 +5,7 @@
 #include <QListWidget>
 #include <QTreeWidgetItem>
 #include <QGraphicsItem>
-
+#include <QUndoView>
 
 #include "../../../../kernel/simulator/Simulator.h"
 #include "../../../../kernel/simulator/TraceManager.h"
@@ -42,8 +42,8 @@ private slots:
 	void on_actionEditGroup_triggered();
 	void on_actionEditUngroup_triggered();
 
-	void on_actionShowRule_triggered();
     void on_actionShowGrid_triggered();
+	void on_actionShowRule_triggered();
 	void on_actionShowGuides_triggered();
 	void on_actionViewConfigure_triggered();
 
@@ -140,6 +140,8 @@ private slots:
     void on_treeWidgetDataDefnitions_itemDoubleClicked(QTreeWidgetItem *item, int column);
     void on_treeWidgetDataDefnitions_itemChanged(QTreeWidgetItem *item, int column);
 
+    void on_actionShowSnap_triggered();
+
 private: // VIEW
 
 private: // trace handlers
@@ -158,8 +160,10 @@ private: // simulator event handlers
 	void _onEntityCreateHandler(SimulationEvent* re);
 	void _onEntityRemoveHandler(SimulationEvent* re);
 private: // model Graphics View handlers
-	void _onSceneMouseEvent(QGraphicsSceneMouseEvent* mouseEvent);
-	void _onSceneGraphicalModelEvent(GraphicalModelEvent* event);
+    void _onSceneMouseEvent(QGraphicsSceneMouseEvent* mouseEvent);
+    void _onSceneWheelInEvent();
+    void _onSceneWheelOutEvent();
+    void _onSceneGraphicalModelEvent(GraphicalModelEvent* event);
 private: // QGraphicsScene Slots
 	void sceneChanged(const QList<QRectF> &region);
 	void sceneFocusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason);
@@ -182,6 +186,7 @@ private: // view
 	void _initModelGraphicsView();
 	void _initUiForNewModel(Model* m);
 	void _actualizeActions();
+    void _actualizeUndo();
 	void _actualizeTabPanes();
 	void _actualizeModelSimLanguage();
 	void _actualizeModelTextHasChanged(bool hasChanged);
@@ -216,6 +221,16 @@ private: // misc useful
 	QString _modelfilename;
 	std::map<std::string /*category*/,QColor>* _pluginCategoryColor = new std::map<std::string,QColor>();
     int _zoomValue; // todo should be set for each open graphical model, such as view rect, etc
+
+    struct COPIED_OCCUPIED {
+        Plugin *plugin;
+        ModelComponent *component;
+        QPointF position;
+        QColor color;
+        bool cut;
+    } _copied;
+
+
 private:
 
 	const struct TABINDEXES_STRUC {
@@ -239,6 +254,8 @@ private:
 		const int TabReportResultIndex = 1;
 		const int TabReportPlotIndex = 2;
 	} CONST;
+
+    QUndoView *undoView = nullptr;
 	//CodeEditor* textCodeEdit_Model;
 };
 #endif // MAINWINDOW_H
