@@ -112,6 +112,9 @@ public:
 	void setConnectingStep(unsigned short connectingStep);
     void setSnapToGrid(bool activated);
     bool getSnapToGrid();
+    void groupComponents();
+    void ungroupComponents();
+    void arranjeModels(int direction);
 public:
 	QList<QGraphicsItem*>*getGraphicalModelDataDefinitions() const;
 	QList<QGraphicsItem*>*getGraphicalModelComponents() const;
@@ -119,6 +122,7 @@ public:
 	QList<QGraphicsItem*>*getGraphicalDrawings() const;
 	QList<QGraphicsItem*>*getGraphicalAnimations() const;
 	QList<QGraphicsItem*>*getGraphicalEntities() const;
+    QList<QGraphicsItemGroup*>*getGraphicalGroups() const;
 
 protected: // virtual functions
 	virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent);
@@ -163,6 +167,7 @@ private:
 	QList<QGraphicsItem*>* _graphicalDrawings = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalAnimations = new QList<QGraphicsItem*>();
 	QList<QGraphicsItem*>* _graphicalEntities = new QList<QGraphicsItem*>();
+    QList<QGraphicsItemGroup*>* _graphicalGroups = new QList<QGraphicsItemGroup*>();
 };
 
 #endif /* MODELGRAPHICSSCENE_H */

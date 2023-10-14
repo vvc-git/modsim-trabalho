@@ -41,6 +41,8 @@ private slots:
 	void on_actionEditDelete_triggered();
 	void on_actionEditGroup_triggered();
 	void on_actionEditUngroup_triggered();
+    void on_actionViewGroup_triggered();
+    void on_actionViewUngroup_triggered();
 
     void on_actionShowGrid_triggered();
 	void on_actionShowRule_triggered();
@@ -139,6 +141,12 @@ private slots:
 
     void on_treeWidgetDataDefnitions_itemDoubleClicked(QTreeWidgetItem *item, int column);
     void on_treeWidgetDataDefnitions_itemChanged(QTreeWidgetItem *item, int column);
+    void on_actionArranjeLeft_triggered();
+    void on_actionArranjeRight_triggered();
+    void on_actionArranjeTop_triggered();
+    void on_actionArranjeBototm_triggered();
+    void on_actionArranjeCenter_triggered();
+    void on_actionArranjeMiddle_triggered();
 
     void on_actionShowSnap_triggered();
 

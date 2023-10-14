@@ -68,9 +68,6 @@ ModelGraphicsScene* ModelGraphicsView::getScene() {
 	return (ModelGraphicsScene*) scene();
 }
 
-void ModelGraphicsView::showGrid() {
-	((ModelGraphicsScene*) scene())->showGrid();
-}
 
 void ModelGraphicsView::clear() {
 	scene()->clear();
@@ -83,9 +80,9 @@ void ModelGraphicsView::beginConnection() {
 void ModelGraphicsView::selectModelComponent(ModelComponent* component) {
 	QList<QGraphicsItem*>* list = ((ModelGraphicsScene*) scene())->getGraphicalModelComponents();
 	for (QGraphicsItem* item : *list) {
-		GraphicalModelComponent* gmc = (GraphicalModelComponent*) item;
+        GraphicalModelComponent* gmc = (GraphicalModelComponent*) item;
 		if (gmc->getComponent() == component) {
-			gmc->setSelected(true);
+            gmc->setSelected(true);
 		} else {
 			gmc->setSelected(false);
 		}
