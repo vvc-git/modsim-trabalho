@@ -137,7 +137,8 @@ private slots:
 	void on_graphicsView_rubberBandChanged(const QRect &viewportRect, const QPointF &fromScenePoint, const QPointF &toScenePoint);
 	void on_TextCodeEditor_textChanged();
 
-
+    void on_treeWidgetDataDefnitions_itemDoubleClicked(QTreeWidgetItem *item, int column);
+    void on_treeWidgetDataDefnitions_itemChanged(QTreeWidgetItem *item, int column);
 
 private: // VIEW
 
