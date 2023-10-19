@@ -211,6 +211,10 @@ SOURCES += \
 	ModelGraphicsView.cpp \
 	ObjectPropertyBrowser.cpp \
 	PropertyEditor.cpp \
+    actions/AddUndoCommand.cpp \
+    actions/DeleteUndoCommand.cpp \
+    actions/MoveUndoCommand.cpp \
+    dialogs/DialogFind.cpp \
 	dialogs/Dialogmodelinformation.cpp \
 	dialogs/dialogBreakpoint.cpp \
 	dialogs/dialogpluginmanager.cpp \
@@ -475,6 +479,10 @@ HEADERS += \
     QPropertyBrowser/qtvariantproperty.h \
     TraitsGUI.h \
     UtilGUI.h \
+    actions/AddUndoCommand.h \
+    actions/DeleteUndoCommand.h \
+    actions/MoveUndoCommand.h \
+    dialogs/DialogFind.h \
 	dialogs/Dialogmodelinformation.h \
 	dialogs/dialogBreakpoint.h \
 	dialogs/dialogpluginmanager.h \

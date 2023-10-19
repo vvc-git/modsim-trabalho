@@ -245,7 +245,6 @@ void ModelGraphicsScene::addDrawing(QPointF endPoint, bool moving) {
         _currentPolygonPoints << endPoint;
         _currentPolygon = new QGraphicsPolygonItem(QPolygonF(_currentPolygonPoints));
         _currentPolygon->setVisible(true);
-
         addItem(_currentPolygon);
     } else if (_drawingMode == POLYGON_POINTS) {
         removeItem(_currentPolygon);
@@ -295,6 +294,10 @@ void ModelGraphicsScene::removeComponent(GraphicalModelComponent* gmc) {
     // ele propriamente remove o objeto na tela
     QUndoCommand *deleteUndoCommand = new DeleteUndoCommand(gmc, this);
     _undoStack->push(deleteUndoCommand);
+}
+
+void ModelGraphicsScene::removeGroup(QGraphicsItemGroup* group) {
+
 }
 
 void ModelGraphicsScene::clearGraphicalModelComponents() {
@@ -582,7 +585,7 @@ void ModelGraphicsScene::groupComponents() {
     if (size > 1 && num_groups > 0) {
         for (int i = 0; (i < size) && !component_in_group; i++) {  //percorrer todos os itens selecionados
             QGraphicsItem* c = selectedItems().at(i);
-            int group_children = c->childItems().size();
+            int group_children = c->childItems().size(); // se tiver filhos, é um grupo
             if (group_children > 1) {
                 component_in_group = true;
             }
@@ -596,7 +599,10 @@ void ModelGraphicsScene::groupComponents() {
 
         for (int i = 0; i < group.size(); i++) {
             QGraphicsItem* c = group.at(i);
-            new_group->addToGroup(c);
+            QGraphicsItem* gmc = dynamic_cast<GraphicalModelComponent*>(c);
+            if (gmc) {
+                new_group->addToGroup(gmc);
+            }
         }
 
         // Adicione o novo grupo à sua cena
@@ -630,12 +636,13 @@ void ModelGraphicsScene::ungroupComponents() {
                 item->setFlag(QGraphicsItem::ItemIsMovable, true);
             }
             // Remova o grupo da cena
+
+            getGraphicalGroups()->removeOne(group);
             removeItem(group);
             delete group;
 
         }
     }
-    selectedItems().clear();
 }
 
 
@@ -786,6 +793,7 @@ void ModelGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
             if (_drawingMode == POLYGON) {
                 // Cria o poligono
                 addDrawing(_drawingStartPoint, false);
+                QPointF currentPoint = mouseEvent->scenePos();
             } else if (_drawingMode == POLYGON_POINTS) {
                 // Continue a adicionar pontos ao polígono
                 addDrawing(mouseEvent->scenePos(), false);
@@ -824,7 +832,7 @@ void ModelGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
     }
 
 
-    if (mouseEvent->button() == Qt::LeftButton && _drawingMode != NONE) {
+    if (mouseEvent->button() == Qt::LeftButton && _drawingMode != NONE && _drawingMode != POLYGON && _drawingMode != POLYGON_POINTS) {
         // Capturar o ponto final da linha
         QPointF drawingEndPoint = mouseEvent->scenePos();
         //Adicionar desenho a tela
@@ -845,6 +853,7 @@ void ModelGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEv
     }
     if (_drawingMode == POLYGON || _drawingMode == POLYGON_POINTS) {
         _drawingMode = POLYGON_FINISHED;
+        ((ModelGraphicsView *) (this->parent()))->unsetCursor();
     }
 }
 
@@ -911,19 +920,6 @@ void ModelGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         QPointF currentPoint = mouseEvent->scenePos();
         addDrawing(currentPoint, true);
         ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
-        /*if (_drawingMode == LINE) {
-            QPointF currentPoint = mouseEvent->scenePos();
-            addDrawing(currentPoint, true);
-            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
-        } else if (_drawingMode == RECTANGLE) {
-            QPointF currentPoint = mouseEvent->scenePos();
-            addDrawing(currentPoint, true);
-            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::SplitHCursor);
-        } else if (_drawingMode == ELLIPSE) {
-            QPointF currentPoint = mouseEvent->scenePos();
-            addDrawing(currentPoint, true);
-            ((ModelGraphicsView *) (this->parent()))->setCursor(Qt::ClosedHandCursor);
-        }*/
     }
 }
 

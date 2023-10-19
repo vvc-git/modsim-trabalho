@@ -91,6 +91,7 @@ public: // editing graphic model
 	void removeGraphicalModelDataDefinition(GraphicalModelDataDefinition* gmdd);
     void removeDrawing(QGraphicsItem * item);
 	void removeAnimation();
+    void removeGroup(QGraphicsItemGroup * group);
     void clearGraphicalModelComponents();
     void clearGraphicalModelConnections();
     QList<GraphicalModelComponent*>* graphicalModelComponentItems();
