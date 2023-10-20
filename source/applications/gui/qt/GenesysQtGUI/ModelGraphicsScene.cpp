@@ -296,9 +296,7 @@ void ModelGraphicsScene::removeComponent(GraphicalModelComponent* gmc) {
     _undoStack->push(deleteUndoCommand);
 }
 
-void ModelGraphicsScene::removeGroup(QGraphicsItemGroup* group) {
 
-}
 
 void ModelGraphicsScene::clearGraphicalModelComponents() {
     QList<GraphicalModelComponent*> *componentsInModel = this->graphicalModelComponentItems();
@@ -435,13 +433,33 @@ void ModelGraphicsScene::removeGraphicalConnection(GraphicalConnection* gc) {
 }
 
 void ModelGraphicsScene::removeDrawing(QGraphicsItem * item) {
-    for (int i = 0 ; i < getGraphicalDrawings()->size(); i++) {
-        if (getGraphicalDrawings()->at(i) == item) {
-            getGraphicalDrawings()->removeAt(i);
-            //removeItem(item);
-            delete(item);
-        }
+    removeItem(item);
+
+    _graphicalDrawings->removeOne(item);
+    delete(item);
+}
+
+void ModelGraphicsScene::removeGroup(QGraphicsItemGroup* group) {
+    // Recupere os itens individuais no grupo
+    QList<QGraphicsItem*> itemsInGroup = group->childItems();
+
+
+    // remover todos os componentes do grupo
+    for (int i = 0; i < itemsInGroup.size(); i++) {
+        QGraphicsItem * item = itemsInGroup.at(i);
+        //remova item por item do grupo
+        group->removeFromGroup(item);
+        //adicionar novamente a cena
+        _graphicalModelComponents->removeOne(item);
+        removeItem(item);
+        delete(item);
     }
+    // Remova o grupo da cena
+
+    _graphicalGroups->removeOne(group);
+    removeItem(group);
+    delete(group);
+
 }
 
 void ModelGraphicsScene::removeAnimation() {}
@@ -581,17 +599,17 @@ void ModelGraphicsScene::groupComponents() {
     int size = selectedItems().size();
     int num_groups = getGraphicalGroups()->size();
     //verifica se algum item selecionado já faz parte de um grupo
-    bool component_in_group = false;
+    bool isItemGroup = false;
     if (size > 1 && num_groups > 0) {
-        for (int i = 0; (i < size) && !component_in_group; i++) {  //percorrer todos os itens selecionados
+        for (int i = 0; (i < size) && !isItemGroup; i++) {  //percorrer todos os itens selecionados
             QGraphicsItem* c = selectedItems().at(i);
-            int group_children = c->childItems().size(); // se tiver filhos, é um grupo
-            if (group_children > 1) {
-                component_in_group = true;
+            QGraphicsItemGroup* isGroup = dynamic_cast<QGraphicsItemGroup*>(c);
+            if (isGroup) {
+                isItemGroup = true;
             }
         }
     }
-    if (!component_in_group) {
+    if (!isItemGroup) {
 
         QList<QGraphicsItem*> group = selectedItems();
 
@@ -640,7 +658,6 @@ void ModelGraphicsScene::ungroupComponents() {
             getGraphicalGroups()->removeOne(group);
             removeItem(group);
             delete group;
-
         }
     }
 }
@@ -677,13 +694,13 @@ void ModelGraphicsScene::arranjeModels(int direction) {
                 GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
                 qreal item_posX = c->x();
                 if (item_posX < most_left) {
-                    most_left = item_posX;
+                    most_left = item_posX;      //salva posição mais a esquerda
                 }
                 if (item_posX > most_right) {
-                    most_right = item_posX;
+                    most_right = item_posX;     //salva posição mais a direita
                 }
             }
-            center = (most_right + most_left) / 2;
+            center = (most_right + most_left) / 2;  //calcula o centro
             for (int i =0; i < size; i++) {
                 GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
                 c->setX(center);
@@ -696,13 +713,13 @@ void ModelGraphicsScene::arranjeModels(int direction) {
                 GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
                 qreal item_posY = c->y();
                 if (item_posY < most_up) {
-                    most_up = item_posY;
+                    most_up = item_posY;    //posicao mais alta
                 }
                 if (item_posY > most_down) {
-                    most_down = item_posY;
+                    most_down = item_posY;  //posicao mais baixa
                 }
             }
-            middle = (most_up + most_down) / 2;
+            middle = (most_up + most_down) / 2; //calcula o meio
             for (int i =0; i < size; i++) {
                 GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
                 c->setY(middle);
@@ -712,12 +729,12 @@ void ModelGraphicsScene::arranjeModels(int direction) {
         if (direction < 4) {
             for (int i =0; i < size; i++) {
                 GraphicalModelComponent* c = dynamic_cast<GraphicalModelComponent*> (selectedItems().at(i));
-                if (direction < 2) {
+                if (direction < 2) { //mais a direita ou mais a esquerda
                     qreal item_pos = c->x();
                     if ((item_pos < most_direction && direction == 0) || (item_pos > most_direction && direction == 1) ) {
                         most_direction = item_pos;
                     }
-                } else {
+                } else { //mais alta ou mais baixo
                     qreal item_pos = c->y();
                     if ((item_pos < most_direction && direction == 2) || (item_pos > most_direction && direction == 3) ) {
                         most_direction = item_pos;
@@ -992,6 +1009,8 @@ void ModelGraphicsScene::keyPressEvent(QKeyEvent *keyEvent) {
 		Model* model = _simulator->getModels()->current();
 		for (QGraphicsItem* item : selected) {
 			GraphicalModelComponent* gmc = dynamic_cast<GraphicalModelComponent*> (item);
+
+
 			if (gmc != nullptr) {
 				// graphically
                 removeComponent(gmc);
@@ -1000,18 +1019,17 @@ void ModelGraphicsScene::keyPressEvent(QKeyEvent *keyEvent) {
 				if (gc != nullptr) {
                     removeGraphicalConnection(gc);
                 } else {
-                    bool aux = getGraphicalDrawings()->contains(item);
-                    if (aux) {
+                    bool isDrawing = getGraphicalDrawings()->contains(item);
+                    if (isDrawing) {
                         removeDrawing(item);
+                    } else {
+                        QGraphicsItemGroup* group = dynamic_cast<QGraphicsItemGroup*> (item);
+                        if (group) {
+                            removeGroup(group);
+                        }
                     }
-                    //Drawing* gc = dynamic_cast<GraphicalConnection*>(item);
-                    //if (gc != nullptr) {
-                    //	removeItem(item);
-                    //	gc->~Drawing();
-                    //}
                 }
             }
-
 		}
 	}
 	_controlIsPressed = (keyEvent->key() == Qt::Key_Control);
